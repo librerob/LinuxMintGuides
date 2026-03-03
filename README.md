@@ -1,8 +1,11 @@
 # 🐧 Linux Mint Guides
 
-A collection of personal installation and configuration guides for **Linux Mint**, **LMDE**, and related distros — focused on full disk encryption (LUKS), Btrfs filesystems, and secure setups.
+A collection of personal installation and configuration guides for **Linux Mint**,
+**LMDE**, and related distros — focused on encrypted root (LUKS), Btrfs
+filesystems, and secure setups.
 
-> ⚠️ **Warning:** Most guides involve **wiping drives entirely**. Always back up your data before following any installation guide.
+> ⚠️ **Warning:** Most guides involve **wiping drives entirely**. Always back up
+> your data before following any installation guide.
 
 ---
 
@@ -10,7 +13,8 @@ A collection of personal installation and configuration guides for **Linux Mint*
 
 ### 🔐 [LMDE + LUKS + Btrfs + Subvolumes](guides/LMDE-BTRFS-LUKS.md)
 
-Install **Linux Mint Debian Edition (LMDE)** with full disk encryption (LUKS) and a Btrfs filesystem using separate `@` and `@home` subvolumes.
+Install **Linux Mint Debian Edition (LMDE)** with encrypted root (LUKS) and a
+Btrfs filesystem using separate `@` and `@home` subvolumes.
 
 - UEFI + GPT partitioning with `gdisk`
 - LUKS container + Btrfs on top
@@ -20,20 +24,22 @@ Install **Linux Mint Debian Edition (LMDE)** with full disk encryption (LUKS) an
 
 ---
 
-### 🔓 [Ubuntu — Auto-unlock Secondary LUKS Drive at Boot](guides/Ubuntu-Secondary-LUKS.md)
+### 🔐 [Ubuntu & Derivatives — Auto-unlock Secondary LUKS Drive at Boot](guides/Ubuntu-Secondary-LUKS.md)
 
-Set up automatic unlocking of a **secondary LUKS-encrypted hard drive** on Ubuntu at boot using `/etc/crypttab` and a keyfile.
+Set up automatic unlocking of a **secondary LUKS-encrypted hard drive** at boot
+on Ubuntu, Linux Mint, and other Ubuntu-based derivatives, using `/etc/crypttab`
+and a keyfile.
 
 ---
 
-### 🛡️ [Linux Mint / Zorin OS — Btrfs Root + LUKS2](guides/LinuxMint-Zorin-Btrfs-Root-Luks2.md)
+### 🔐 [Linux Mint & Ubuntu Derivatives — Btrfs Root + LUKS2](guides/LinuxMint-Zorin-Btrfs-Root-Luks2.md)
 
-Install **Linux Mint** or **Zorin OS** with LUKS2 encryption on a Btrfs root filesystem.
+Install **Linux Mint** or other Ubuntu-based derivatives with LUKS2 encrypted
+root on a Btrfs filesystem.
 
 ---
 
 ## ℹ️ About
 
-These are personal reference guides collected while setting up encrypted Linux systems. Shared in case they help others doing similar installs.
-
-Inspired in part by [Sindastra's encryption guides](https://sindastra.de).
+These are personal reference guides collected while setting up encrypted Linux
+systems. Shared in case they help others doing similar installs.
