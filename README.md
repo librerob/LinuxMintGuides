@@ -8,6 +8,12 @@ A collection of personal installation and configuration guides for **Linux Mint*
 
 ## Guides
 
+### [Linux Mint & Ubuntu Derivatives - Btrfs Root + LUKS2](guides/LinuxMint-Zorin-Btrfs-Root-Luks2.md)
+
+Install **Linux Mint** or other Ubuntu-based derivatives with LUKS2 encrypted root on a Btrfs filesystem.
+
+---
+
 ### [LMDE + LUKS + Btrfs + Subvolumes](guides/LMDE-BTRFS-LUKS.md)
 
 Install **Linux Mint Debian Edition (LMDE)** with encrypted root (LUKS) and a Btrfs filesystem using separate `@` and `@home` subvolumes.
@@ -26,15 +32,22 @@ Set up automatic unlocking of a **secondary LUKS-encrypted hard drive** at boot 
 
 ---
 
-### [Linux Mint & Ubuntu Derivatives - Btrfs Root + LUKS2](guides/LinuxMint-Zorin-Btrfs-Root-Luks2.md)
+### [Ubuntu & Derivatives - Post-Install Guide](guides/ubuntu-post-install.md)
 
-Install **Linux Mint** or other Ubuntu-based derivatives with LUKS2 encrypted root on a Btrfs filesystem.
+Everything to do right after a fresh Ubuntu, Linux Mint, or Ubuntu-based install.
+
+- Kernel hardening and system tuning via `sysctl`
+- Cloudflare DNS over TLS with `systemd-resolved`
+- Random MAC address at every boot via NetworkManager
+- UFW firewall setup (including QEMU/Virt-Manager support)
+- Disable unnecessary services (CUPS, Bluetooth)
+- Recommended software (Brave, KeePassXC, Zsh, Virt-Manager, and more)
 
 ---
 
 ### [Linux - Set Default Fonts and Font Aliases with Fontconfig](guides/linux-fontconfig)
 
-Configure system and web fonts on Linux using **fontconfig** — so preferred fonts are used consistently across all applications and websites.
+Configure system and web fonts on Linux using **fontconfig** so preferred fonts are used consistently across all applications and websites.
 
 - Install metric-compatible replacements for Arial, Times New Roman, Calibri, and more
 - Alias common Microsoft font names to open font equivalents (`fonts-croscore`, `fonts-crosextra-*`)
