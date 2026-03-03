@@ -1,8 +1,8 @@
 # Installing **Linux Mint Debian Edition (LMDE)**
 
-## with **Full Disk Encryption (LUKS)** + **Btrfs + Subvolumes**
+## with **Disk Encryption (LUKS)** + **Btrfs + Subvolumes**
 
-This guide walks through setting up LMDE with LUKS full‑disk encryption and a Btrfs filesystem with separate subvolumes for `/` and `/home`.
+This guide walks through setting up LMDE with LUKS disk encryption and a Btrfs filesystem with separate subvolumes for `/` and `/home`.
 It’s inspired by *Sindastra’s guide (April 2024)*. 
 
 ---
