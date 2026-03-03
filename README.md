@@ -47,5 +47,3 @@ Configure system and web fonts on Linux using **fontconfig** — so preferred fo
 ## About
 
 These are personal reference guides collected while setting up and configuring Linux systems. Shared in case they help others doing similar work.
-
-Inspired in part by [Sindastra's encryption guides](https://sindastra.de).
