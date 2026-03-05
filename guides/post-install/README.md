@@ -465,24 +465,26 @@ ping -c 3 google.com # DNS resolution
 
 ### What this does
 
-Several services are enabled by default on Ubuntu that many desktop users never need. Disabling them reduces the attack surface, frees up memory, and cuts down on background activity. The three covered here are:
+Several services are enabled by default on Ubuntu that many desktop users never need. Disabling them reduces the attack surface, frees up memory, and cuts down on background activity.
 
-- **CUPS** (`cups.service`) — the Common Unix Printing System. Only needed if you print.
-- **cups-browsed** (`cups-browsed.service`) — automatically discovers network printers. A past source of serious vulnerabilities; disable unless you actively need it.
-- **Bluetooth** (`bluetooth.service`) — the Bluetooth stack. Disable if you do not use Bluetooth devices.
+| Service | What it does | Why disable |
+|---|---|---|
+| `cups.service` | Common Unix Printing System | Only needed if you print |
+| `cups-browsed.service` | Auto-discovers network printers | Past source of serious vulnerabilities |
+| `bluetooth.service` | Bluetooth stack | Disable if you don't use Bluetooth |
+| `openvpn.service` | OpenVPN daemon | Not needed unless you run an OpenVPN server or always-on client |
+| `kerneloops.service` | Collects and submits kernel crash reports | Sends data to external servers; not useful on a desktop |
+| `ModemManager.service` | Manages mobile broadband modems | Not needed on desktops without a mobile data modem |
+| `casper-md5check.service` | Verifies live USB integrity at boot | Only relevant on live USBs — does nothing on an installed system |
 
-> **Note:** These commands `stop` the service immediately (for the current session) and `disable` it so it does not start at the next boot. If you ever need to re-enable one, replace `stop` with `start` and `disable` with `enable`.
+> **Note:** These commands `stop` the service immediately (for the current session) and `disable` it so it does not start at the next boot. If you ever need to re-enable one, replace `stop` with `start` and `disable` with `enable`. If a service is not installed, systemctl will simply report that the unit was not found — that is fine.
 
 ### Disable CUPS (printing)
 
 ```bash
-sudo systemctl stop cups.service
-sudo systemctl disable cups.service
-sudo systemctl stop cups-browsed.service
-sudo systemctl disable cups-browsed.service
+sudo systemctl stop cups.service cups-browsed.service
+sudo systemctl disable cups.service cups-browsed.service
 ```
-
-If CUPS is not installed, these commands will simply report that the unit was not found — that is fine.
 
 ### Disable Bluetooth
 
@@ -491,17 +493,50 @@ sudo systemctl stop bluetooth.service
 sudo systemctl disable bluetooth.service
 ```
 
-### Verify they are disabled
+### Disable OpenVPN
 
 ```bash
-systemctl is-enabled cups.service
-systemctl is-enabled cups-browsed.service
-systemctl is-enabled bluetooth.service
+sudo systemctl stop openvpn.service
+sudo systemctl disable openvpn.service
 ```
 
-Each should return `disabled`. If any return `enabled`, re-run the disable command for that service.
+### Disable kerneloops
 
-> **Re-enabling later:** If you buy a printer or Bluetooth headset and need these back:
+```bash
+sudo systemctl stop kerneloops.service
+sudo systemctl disable kerneloops.service
+```
+
+### Disable ModemManager
+
+```bash
+sudo systemctl stop ModemManager.service
+sudo systemctl disable ModemManager.service
+```
+
+### Disable casper-md5check
+
+```bash
+sudo systemctl stop casper-md5check.service
+sudo systemctl disable casper-md5check.service
+```
+
+### Verify they are all disabled
+
+```bash
+systemctl is-enabled \
+  cups.service \
+  cups-browsed.service \
+  bluetooth.service \
+  openvpn.service \
+  kerneloops.service \
+  ModemManager.service \
+  casper-md5check.service
+```
+
+Each should return `disabled` or `not-found`. If any return `enabled`, re-run the disable command for that service.
+
+> **Re-enabling later:** If you buy a printer, Bluetooth headset, or need any of these back:
 > ```bash
 > sudo systemctl enable --now cups.service
 > sudo systemctl enable --now bluetooth.service
@@ -914,6 +949,10 @@ All settings (except the active MAC address) will also **persist across reboots*
 | UFW forward policy | `/etc/default/ufw` | `sudo ufw reload` |
 | Disable CUPS | — (CLI only) | `sudo systemctl disable cups.service cups-browsed.service` |
 | Disable Bluetooth | — (CLI only) | `sudo systemctl disable bluetooth.service` |
+| Disable OpenVPN | — (CLI only) | `sudo systemctl disable openvpn.service` |
+| Disable kerneloops | — (CLI only) | `sudo systemctl disable kerneloops.service` |
+| Disable ModemManager | — (CLI only) | `sudo systemctl disable ModemManager.service` |
+| Disable casper-md5check | — (CLI only) | `sudo systemctl disable casper-md5check.service` |
 | Install software | — (CLI only) | `sudo apt install ...` |
 | Set default shell to Zsh | — (CLI only) | `chsh -s $(which zsh)` |
 | Cinnamon tweaks | — (GUI only) | System Settings / right-click taskbar |
