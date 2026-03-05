@@ -68,14 +68,22 @@ sudo mkfs.ext4 /dev/mapper/Backup-Linux
 ### 4. Mount it (optional — to verify or start using it)
 
 ```bash
-sudo mkdir -p /mnt/Backup-Linux
-sudo mount /dev/mapper/Backup-Linux /mnt/Backup-Linux
+sudo mkdir -p /media/robin/Backup-Linux
+sudo mount /dev/mapper/Backup-Linux /media/robin/Backup-Linux
 ```
 
-### 5. Close / lock the drive when done
+### 5. Fix permissions so your user can write to it
+
+After mounting, the drive is owned by root. Fix this so your user can write files without sudo:
 
 ```bash
-sudo umount /mnt/Backup-Linux
+sudo chown robin:robin /media/robin/Backup-Linux
+```
+
+### 6. Close / lock the drive when done
+
+```bash
+sudo umount /media/robin/Backup-Linux
 sudo cryptsetup close Backup-Linux
 ```
 
@@ -85,17 +93,22 @@ sudo cryptsetup close Backup-Linux
 
 After setup, GNOME Files (Nautilus) will automatically prompt for your passphrase when you plug in the drive and handle mounting/unmounting. No terminal needed for day-to-day use.
 
+> ⚠️ If you get `Permission denied` errors (e.g. from rsync), re-run the chown fix — it may be needed again after a replug in some setups:
+> ```bash
+> sudo chown robin:robin /media/robin/Backup-Linux
+> ```
+
 To mount manually:
 
 ```bash
 sudo cryptsetup open /dev/sdb Backup-Linux
-sudo mount /dev/mapper/Backup-Linux /mnt/Backup-Linux
+sudo mount /dev/mapper/Backup-Linux /media/robin/Backup-Linux
 ```
 
 To unmount manually:
 
 ```bash
-sudo umount /mnt/Backup-Linux
+sudo umount /media/robin/Backup-Linux
 sudo cryptsetup close Backup-Linux
 ```
 
@@ -131,7 +144,7 @@ After setup the drive may show as a UUID (e.g. `e66a71f7-b5eb-4bc2-96d9-8cbf4dcf
 
 ```bash
 # 1. Unmount if currently mounted
-sudo umount /media/$USER/<uuid>
+sudo umount /media/robin/<uuid>
 
 # 2. Open the LUKS container (if not already open)
 sudo cryptsetup open /dev/sdb Backup-Linux
