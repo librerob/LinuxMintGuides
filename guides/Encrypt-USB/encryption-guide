@@ -1,0 +1,133 @@
+# 🔐 Encrypted USB Backup Drive Setup (LUKS2 + ext4)
+
+A guide to formatting a USB drive with strong LUKS2 encryption using argon2id — the same KDF used for hardened Linux system drives.
+
+---
+
+## Why LUKS2 + argon2id?
+
+| | LUKS1 (GNOME Disks default) | LUKS2 + argon2id (this guide) |
+|---|---|---|
+| KDF | PBKDF2 | argon2id |
+| GPU brute-force resistance | Weak | Strong (memory-hard) |
+| Unlock time | ~0.5s | ~4s |
+| Read/write speed after unlock | Normal | Identical |
+
+> **argon2id** is memory-hard, meaning brute-force attacks via GPU/ASIC are significantly more expensive. The 4 second unlock delay only happens once when mounting — file transfers are unaffected.
+
+---
+
+## Prerequisites
+
+- `cryptsetup` installed (`sudo apt install cryptsetup` on Debian/Ubuntu)
+- Your USB drive identified — use `lsblk` to confirm the device name before proceeding
+
+```bash
+lsblk
+```
+
+> ⚠️ **Double-check your device name.** This guide uses `/dev/sdb`. Substitue with your actual device. Running `luksFormat` on the wrong drive will wipe it.
+
+---
+
+## How it works
+
+```
+/dev/sdb  →  LUKS2 container  →  ext4 filesystem inside
+```
+
+LUKS wraps the entire drive first, then ext4 lives inside the encrypted container. The order matters — LUKS goes on before formatting.
+
+---
+
+## Setup Steps
+
+### 1. Write the LUKS2 container to the drive
+
+```bash
+sudo cryptsetup luksFormat --type=luks2 --pbkdf argon2id --iter-time 4000 /dev/sdb
+```
+
+- You will be prompted to type `YES` (in caps) to confirm
+- Then set and confirm your passphrase — **use a strong one, there's no recovery if you forget it**
+
+### 2. Open / unlock the container
+
+```bash
+sudo cryptsetup open /dev/sdb Backup-Linux
+```
+
+This creates a decrypted device at `/dev/mapper/Backup-Linux`.
+
+### 3. Format the decrypted device as ext4
+
+```bash
+sudo mkfs.ext4 /dev/mapper/Backup-Linux
+```
+
+### 4. Mount it (optional — to verify or start using it)
+
+```bash
+sudo mkdir -p /mnt/Backup-Linux
+sudo mount /dev/mapper/Backup-Linux /mnt/Backup-Linux
+```
+
+### 5. Close / lock the drive when done
+
+```bash
+sudo umount /mnt/Backup-Linux
+sudo cryptsetup close Backup-Linux
+```
+
+---
+
+## Everyday Use
+
+After setup, GNOME Files (Nautilus) will automatically prompt for your passphrase when you plug in the drive and handle mounting/unmounting. No terminal needed for day-to-day use.
+
+To mount manually:
+
+```bash
+sudo cryptsetup open /dev/sdb Backup-Linux
+sudo mount /dev/mapper/Backup-Linux /mnt/Backup-Linux
+```
+
+To unmount manually:
+
+```bash
+sudo umount /mnt/Backup-Linux
+sudo cryptsetup close Backup-Linux
+```
+
+---
+
+## Optional: Even Stronger Encryption
+
+Add `--pbkdf-memory 1048576` to require 1 GB of RAM per unlock attempt, making GPU attacks significantly harder:
+
+```bash
+sudo cryptsetup luksFormat --type=luks2 --pbkdf argon2id --iter-time 4000 --pbkdf-memory 1048576 /dev/sdb
+```
+
+> Note: This requires 1 GB of free RAM on the machine unlocking the drive.
+
+---
+
+## Check Existing Drive Encryption
+
+To inspect what LUKS version and KDF an already-encrypted drive uses:
+
+```bash
+sudo cryptsetup luksDump /dev/sdb
+```
+
+Look for the `Version:` and `PBKDF:` fields.
+
+---
+
+## ⚠️ Important Reminders
+
+- **Back up your data before running `luksFormat`** — it wipes everything
+- There is **no passphrase recovery** — if you forget it, the data is gone
+- The drive will **not be readable on Windows** without third-party tools (e.g. LibreCrypt)
+- Always safely eject / close the container before unplugging
