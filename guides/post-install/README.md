@@ -1,8 +1,8 @@
-# Ubuntu Post-Install Guide
+# Linux Mint Cinnamon Post-Install Guide
 
-> Applies to: Ubuntu 22.04/24.04 and derivatives (Linux Mint, Pop!_OS, Zorin OS, etc.)
+> Written for Linux Mint Cinnamon, but most sections apply equally to Ubuntu 22.04/24.04 and other derivatives (Pop!_OS, Zorin OS, etc.).
 
-This guide covers everything to do right after a fresh Ubuntu install — system tuning, security configuration, disabling unnecessary services, setting up your preferred software, and configuring the Cinnamon desktop. Each section explains **what the setting does**, **where the file goes**, and **which service to restart**.
+This guide covers everything to do right after a fresh Linux Mint install — system tuning, security configuration, disabling unnecessary services, setting up your preferred software, and configuring the Cinnamon desktop. Each section explains **what the setting does**, **where the file goes**, and **which service to restart**.
 
 ---
 
@@ -827,25 +827,6 @@ groups | grep kvm
 </domain>
 ```
 
-### Brave Browser
-
-Brave is not in the official Ubuntu repos and must be installed via its own apt repository.
-
-```bash
-sudo apt install curl -y
-
-sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
-  https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-
-echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] \
-  https://brave-browser-apt-release.s3.brave.com/ stable main" \
-  | sudo tee /etc/apt/sources.list.d/brave-browser.list
-
-sudo apt update && sudo apt install brave-browser -y
-```
-
-This adds Brave's official signed repository to your system, so future updates arrive automatically via `apt upgrade`.
-
 ### Make Zsh your default shell
 
 After installing `zsh`, switch your user account's default shell from bash:
@@ -863,11 +844,6 @@ echo $SHELL
 ```
 
 Should output `/usr/bin/zsh` or `/bin/zsh`.
-
-> **Want more from Zsh?** Consider installing [Oh My Zsh](https://ohmyz.sh/) afterwards for themes and plugins:
-> ```bash
-> sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-> ```
 
 ---
 
@@ -1005,18 +981,6 @@ gtk-theme-name="Mint-Y-Dark-Aqua"
 
 The `/etc/environment` variables are only picked up at login. After logging back in, Qt apps will follow your dark GTK theme automatically without any extra flags.
 
-### Verify
-
-Launch any Qt5 app normally and confirm it renders with your dark theme:
-
-```bash
-featherpad &
-```
-
-### Notes on specific apps
-
-Some Qt apps — notably **KeePassXC** — have their own internal theme override that ignores the system entirely. For these, set the theme inside the app: **Tools → Settings → General → Appearance → Application theme → System**. After doing that, the GTK bridge takes effect for those apps too.
-
 ### Troubleshooting
 
 | Symptom | Likely cause | Fix |
@@ -1092,4 +1056,4 @@ All settings (except the active MAC address) will also **persist across reboots*
 
 ---
 
-*Guide tested on Ubuntu 22.04 LTS, Ubuntu 24.04 LTS, Linux Mint 21.x, and Pop!_OS 22.04.*
+*Guide written for Linux Mint Cinnamon. Most sections also work on Ubuntu 22.04/24.04 LTS, Pop!_OS 22.04, and other Ubuntu-based derivatives.*
