@@ -1009,6 +1009,7 @@ Most of the fonts below are available directly from the Ubuntu repositories. A f
 sudo apt install -y \
   fonts-liberation \
   fonts-liberation2 \
+  fonts-liberation-sans-narrow \
   fonts-croscore \
   fonts-crosextra-carlito \
   fonts-crosextra-caladea \
