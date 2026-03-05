@@ -19,8 +19,9 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 9. [Software to Install](#9-software-to-install)
 10. [Cinnamon Desktop Tweaks](#10-cinnamon-desktop-tweaks)
 11. [Unified Qt & GTK Theming](#11-unified-qt--gtk-theming)
-12. [Applying Everything & Verifying](#12-applying-everything--verifying)
-13. [Quick Reference Cheatsheet](#13-quick-reference-cheatsheet)
+12. [Font Configuration](#12-font-configuration)
+13. [Applying Everything & Verifying](#13-applying-everything--verifying)
+14. [Quick Reference Cheatsheet](#14-quick-reference-cheatsheet)
 
 ---
 
@@ -948,10 +949,10 @@ nano ~/.config/gtk-3.0/settings.ini
 
 ```ini
 [Settings]
-gtk-font-name=Ubuntu Sans Regular 10
+gtk-font-name=Inter Medium 11
 gtk-cursor-theme-name=DMZ-Black
 gtk-icon-theme-name=Mint-Y-Sand
-gtk-theme-name=Mint-Y-Dark-Aqua
+gtk-theme-name=Flat-Remix-GTK-Blue-Darkest-Solid-Cinnamon-Patch
 ```
 
 > Adjust the font, cursor, icon, and theme values to match whatever you have set in Cinnamon System Settings.
@@ -961,7 +962,7 @@ gtk-theme-name=Mint-Y-Dark-Aqua
 The GTK2 widget style (`QT_STYLE_OVERRIDE=gtk2`) reads from `~/.gtkrc-2.0` rather than the GTK3 settings file. Cinnamon creates this file but does not write the theme name into it. Append it:
 
 ```bash
-echo 'gtk-theme-name="Mint-Y-Dark-Aqua"' >> ~/.gtkrc-2.0
+echo 'gtk-theme-name="Flat-Remix-GTK-Blue-Darkest-Solid-Cinnamon-Patch"' >> ~/.gtkrc-2.0
 ```
 
 The file should now look similar to this:
@@ -974,7 +975,7 @@ style "cs-scrollbar-style" {
 }
 class "GtkScrollbar" style "cs-scrollbar-style"
 ###############################################
-gtk-theme-name="Mint-Y-Dark-Aqua"
+gtk-theme-name="Flat-Remix-GTK-Blue-Darkest-Solid-Cinnamon-Patch"
 ```
 
 ### Step 4 — Log out and back in
@@ -992,7 +993,531 @@ The `/etc/environment` variables are only picked up at login. After logging back
 
 ---
 
-## 12. Applying Everything & Verifying
+## 12. Font Configuration
+
+Good font configuration on Linux Mint covers three things: rendering quality (how fonts are drawn on screen), metric-compatible substitutions (so documents and web pages that request Windows fonts render with correct spacing), and choosing readable system fonts for the desktop UI.
+
+Linux Mint Cinnamon ships with sensible rendering defaults, but the substitution rules and font choices below improve on them meaningfully.
+
+### 12.1 Install fonts
+
+Most of the fonts below are available directly from the Ubuntu repositories. A few must be downloaded manually as noted.
+
+**From apt:**
+
+```bash
+sudo apt install -y \
+  fonts-liberation \
+  fonts-liberation2 \
+  fonts-carlito \
+  fonts-caladea \
+  fonts-dejavu \
+  fonts-noto \
+  fonts-noto-color-emoji \
+  fonts-inter \
+  fonts-linuxlibertine \
+  fonts-jetbrains-mono
+```
+
+**Downloaded manually** — these are not in the Ubuntu repos:
+
+| Font | Purpose | Download |
+|---|---|---|
+| Gelasio | Metric-compatible replacement for Georgia | [fonts.google.com/specimen/Gelasio](https://fonts.google.com/specimen/Gelasio) |
+| Comic Neue | Replacement for Comic Sans MS | [fonts.google.com/specimen/Comic+Neue](https://fonts.google.com/specimen/Comic+Neue) |
+| Selawik | Replacement for Segoe UI | [github.com/microsoft/Selawik/releases/tag/1.01](https://github.com/microsoft/Selawik/releases/tag/1.01) |
+
+To install downloaded fonts, copy the `.ttf` files to your user font directory and rebuild the font cache:
+
+```bash
+mkdir -p ~/.local/share/fonts
+cp ~/Downloads/*.ttf ~/.local/share/fonts/
+fc-cache -fv
+```
+
+Verify a font installed correctly:
+
+```bash
+fc-match "Gelasio"
+fc-match "Comic Neue"
+fc-match "Selawik"
+```
+
+### 12.2 fontconfig — `~/.config/fontconfig/fonts.conf`
+
+This file controls rendering quality and sets up metric-compatible substitutions so that documents and web pages requesting Windows fonts get correctly-sized free alternatives instead of random fallbacks.
+
+Place it at `~/.config/fontconfig/fonts.conf` (per-user) or `/etc/fonts/local.conf` (system-wide). After saving, run `fc-cache -fv`.
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<!--
+╔══════════════════════════════════════════════════════════════════╗
+║         fonts.conf — Optimized for Readability on Linux          ║
+║                                                                  ║
+║  Place at:  ~/.config/fontconfig/fonts.conf  (per-user)          ║
+║         or  /etc/fonts/local.conf            (system-wide)       ║
+║                                                                  ║
+║  After installing, run:  fc-cache -fv                            ║
+║                                                                  ║
+║  Recommended packages (Mint/Ubuntu):                             ║
+║    fonts-liberation  fonts-carlito  fonts-caladea                ║
+║    fonts-dejavu  fonts-noto  fonts-noto-color-emoji              ║
+║    + Comic Neue from fonts.google.com → ~/.local/share/fonts/    ║
+║                                                                  ║
+║  For MS fonts (if legally obtained):                             ║
+║    ttf-ms-fonts (AUR) or copy from a Windows install             ║
+╚══════════════════════════════════════════════════════════════════╝
+-->
+<fontconfig>
+
+  <!-- ============================================================
+       SECTION 1: RENDERING QUALITY
+       Best settings for modern LCD monitors (RGB subpixel layout).
+       Change rgba to "bgr" if your screen uses that layout.
+       Test your subpixel layout at: https://www.lagom.nl/lcd-test/subpixel.php
+       ============================================================ -->
+
+  <!-- Enable antialiasing (always on for LCD) -->
+  <match target="font">
+    <edit name="antialias" mode="assign">
+      <bool>true</bool>
+    </edit>
+  </match>
+
+  <!-- Enable hinting (BCI uses font's own hint instructions) -->
+  <match target="font">
+    <edit name="hinting" mode="assign">
+      <bool>true</bool>
+    </edit>
+  </match>
+
+  <!-- hintslight: best balance of sharpness vs shape preservation.
+       Options: hintnone | hintslight | hintmedium | hintfull
+         hintslight = slightly fuzzy but true to the font design (recommended)
+         hintmedium = good middle ground on 1080p screens
+         hintfull   = crispest / most "Windows-like", distorts letterforms -->
+  <match target="font">
+    <edit name="hintstyle" mode="assign">
+      <const>hintslight</const>
+    </edit>
+  </match>
+
+  <!-- Subpixel layout: rgb = most common modern monitor arrangement -->
+  <match target="font">
+    <edit name="rgba" mode="assign">
+      <const>rgb</const>
+    </edit>
+  </match>
+
+  <!-- LCD filter: reduces color fringing from subpixel rendering.
+       lcddefault is the standard ClearType-equivalent filter.
+       Use lcdlight if fonts appear too bold or blurry. -->
+  <match target="font">
+    <edit name="lcdfilter" mode="assign">
+      <const>lcddefault</const>
+    </edit>
+  </match>
+
+  <!-- Disable autohinter — use the font's own BCI hints instead.
+       Autohinter is mainly useful for poorly-hinted fonts. -->
+  <match target="font">
+    <edit name="autohint" mode="assign">
+      <bool>false</bool>
+    </edit>
+  </match>
+
+  <!-- Disable embedded bitmaps for scalable fonts.
+       Avoids pixelated rendering at certain sizes (Calibri, Cambria, Monaco etc.) -->
+  <match target="font">
+    <edit name="embeddedbitmap" mode="assign">
+      <bool>false</bool>
+    </edit>
+  </match>
+
+  <!-- Re-enable embedded bitmaps for emoji (required for correct rendering) -->
+  <match target="font">
+    <test name="family" qual="any">
+      <string>Noto Color Emoji</string>
+    </test>
+    <edit name="embeddedbitmap" mode="assign">
+      <bool>true</bool>
+    </edit>
+  </match>
+
+
+  <!-- ============================================================
+       SECTION 2: DEFAULT FONT FAMILIES
+       Sets the preferred fonts for the three universal aliases.
+       Applications requesting "serif", "sans-serif", or "monospace"
+       will get these first.
+
+       Liberation fonts are metric-compatible with Times New Roman,
+       Arial, and Courier New — web pages and documents render
+       with correct spacing even without MS fonts installed.
+       ============================================================ -->
+
+  <alias>
+    <family>sans-serif</family>
+    <prefer>
+      <family>Liberation Sans</family>    <!-- Arial metric-compatible        -->
+      <family>Arimo</family>              <!-- Chrome OS / Apache 2.0 fallback -->
+      <family>DejaVu Sans</family>        <!-- Wide Unicode coverage           -->
+      <family>Noto Sans</family>          <!-- Ultimate Unicode fallback        -->
+    </prefer>
+  </alias>
+
+  <alias>
+    <family>serif</family>
+    <prefer>
+      <family>Liberation Serif</family>   <!-- Times New Roman metric-compatible -->
+      <family>Tinos</family>              <!-- Chrome OS serif fallback          -->
+      <family>DejaVu Serif</family>
+      <family>Noto Serif</family>
+    </prefer>
+  </alias>
+
+  <alias>
+    <family>monospace</family>
+    <prefer>
+      <family>Liberation Mono</family>    <!-- Courier New metric-compatible     -->
+      <family>DejaVu Sans Mono</family>   <!-- Excellent coding font             -->
+      <family>Cousine</family>            <!-- Chrome OS mono fallback           -->
+      <family>Noto Sans Mono</family>
+    </prefer>
+  </alias>
+
+  <!-- "sans" alias used by some older apps -->
+  <alias>
+    <family>sans</family>
+    <prefer>
+      <family>Liberation Sans</family>
+      <family>Arimo</family>
+    </prefer>
+  </alias>
+
+  <!-- Emoji -->
+  <alias>
+    <family>emoji</family>
+    <prefer>
+      <family>Noto Color Emoji</family>
+    </prefer>
+  </alias>
+
+
+  <!-- ============================================================
+       SECTION 3: METRIC-COMPATIBLE SUBSTITUTIONS
+       Maps commonly-requested MS / PostScript font names to free
+       metric-compatible equivalents. Documents and web pages that
+       request these fonts render with correct line lengths and spacing.
+
+       Based on fontconfig's 30-metric-aliases.conf and the
+       Arch Wiki metric-compatible fonts table.
+       ============================================================ -->
+
+  <!-- Arial → Liberation Sans (exact metric match) -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Arial</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Sans</string>
+    </edit>
+  </match>
+
+  <!-- Helvetica → Liberation Sans -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Helvetica</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Sans</string>
+    </edit>
+  </match>
+
+  <!-- Arial Narrow → Liberation Sans Narrow (install: ttf-liberation-sans-narrow AUR) -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Arial Narrow</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Sans Narrow</string>
+    </edit>
+  </match>
+
+  <!-- Times / Times New Roman → Liberation Serif -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Times New Roman</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Serif</string>
+    </edit>
+  </match>
+  <match target="pattern">
+    <test name="family" qual="any"><string>Times</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Serif</string>
+    </edit>
+  </match>
+
+  <!-- Courier / Courier New → Liberation Mono -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Courier New</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Mono</string>
+    </edit>
+  </match>
+  <match target="pattern">
+    <test name="family" qual="any"><string>Courier</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Mono</string>
+    </edit>
+  </match>
+
+  <!-- Calibri → Carlito (purpose-built metric-compatible replacement) -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Calibri</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Carlito</string>
+    </edit>
+  </match>
+
+  <!-- Cambria → Caladea (purpose-built metric-compatible replacement) -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Cambria</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Caladea</string>
+    </edit>
+  </match>
+
+  <!-- Georgia → Gelasio (metric-compatible, SIL OFL, by Eben Sorkin) -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Georgia</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Gelasio</string>
+    </edit>
+  </match>
+
+  <!-- Segoe UI → Selawik (Microsoft's own open-source alternative) -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Segoe UI</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Selawik</string>
+    </edit>
+  </match>
+
+  <!-- MS Sans Serif / Microsoft Sans Serif → Liberation Sans -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>MS Sans Serif</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Sans</string>
+    </edit>
+  </match>
+  <match target="pattern">
+    <test name="family" qual="any"><string>Microsoft Sans Serif</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Sans</string>
+    </edit>
+  </match>
+
+  <!-- MS Serif → Liberation Serif -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>MS Serif</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Liberation Serif</string>
+    </edit>
+  </match>
+
+  <!-- Tahoma → Wine Tahoma (install: ttf-tahoma from AUR)
+       Note: Wine Tahoma stores the name "Tahoma" in its TTF data,
+       so no substitution rule is needed if it is installed. -->
+
+  <!-- Century Gothic → TeX Gyre Adventor (PostScript ITC Avant Garde compatible) -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Century Gothic</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>TeX Gyre Adventor</string>
+    </edit>
+  </match>
+
+  <!-- Comic Sans MS → Comic Neue (cleaner handwritten style, same feel) -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Comic Sans MS</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Comic Neue</string>
+    </edit>
+  </match>
+  <match target="pattern">
+    <test name="family" qual="any"><string>Comic Sans</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>Comic Neue</string>
+    </edit>
+  </match>
+
+  <!-- Palatino / Book Antiqua → TeX Gyre Pagella -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Palatino Linotype</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>TeX Gyre Pagella</string>
+    </edit>
+  </match>
+  <match target="pattern">
+    <test name="family" qual="any"><string>Book Antiqua</string></test>
+    <edit name="family" mode="assign" binding="same">
+      <string>TeX Gyre Pagella</string>
+    </edit>
+  </match>
+
+
+  <!-- ============================================================
+       SECTION 4: PER-FONT RENDERING OVERRIDES
+       Fine-tune hinting for specific fonts that benefit from it.
+       ============================================================ -->
+
+  <!-- Noto fonts have good hinting data, hintfull gives crisp results -->
+  <match target="font">
+    <test name="family" qual="any">
+      <string>Noto Sans</string>
+    </test>
+    <edit name="hintstyle" mode="assign">
+      <const>hintfull</const>
+    </edit>
+  </match>
+  <match target="font">
+    <test name="family" qual="any">
+      <string>Noto Serif</string>
+    </test>
+    <edit name="hintstyle" mode="assign">
+      <const>hintfull</const>
+    </edit>
+  </match>
+
+  <!-- Liberation fonts also have solid hinting -->
+  <match target="font">
+    <test name="family" qual="any">
+      <string>Liberation Sans</string>
+    </test>
+    <edit name="hintstyle" mode="assign">
+      <const>hintfull</const>
+    </edit>
+  </match>
+  <match target="font">
+    <test name="family" qual="any">
+      <string>Liberation Mono</string>
+    </test>
+    <edit name="hintstyle" mode="assign">
+      <const>hintfull</const>
+    </edit>
+  </match>
+
+
+  <!-- ============================================================
+       SECTION 5: HiDPI / 4K DISPLAY OVERRIDE
+       On displays above ~192 DPI, hinting is counterproductive.
+       Uncomment this block if you use a HiDPI screen.
+
+  <match target="font">
+    <edit name="hinting" mode="assign">
+      <bool>false</bool>
+    </edit>
+  </match>
+  <match target="font">
+    <edit name="hintstyle" mode="assign">
+      <const>hintnone</const>
+    </edit>
+  </match>
+       ============================================================ -->
+
+
+  <!-- ============================================================
+       SECTION 6: NOTES FOR GTK4 / XRESOURCES
+
+       GTK4 / libadwaita apps (GNOME, etc.) IGNORE fontconfig hinting.
+       To fix, add to ~/.config/gtk-4.0/settings.ini:
+         [Settings]
+         gtk-hint-font-metrics=true
+         gtk-font-rendering=manual
+
+       For non-GNOME desktops (and apps that use Xft directly),
+       add to ~/.Xresources:
+         Xft.antialias: 1
+         Xft.hinting:   1
+         Xft.hintstyle: hintslight
+         Xft.rgba:      rgb
+         Xft.lcdfilter: lcddefault
+       Then run: xrdb -merge ~/.Xresources
+
+       For incorrect hinting in GTK3 apps outside GNOME/Plasma,
+       install xsettingsd and configure ~/.xsettingsd:
+         Xft/Hinting 1
+         Xft/HintStyle "hintslight"
+         Xft/Antialias 1
+         Xft/RGBA "rgb"
+       ============================================================ -->
+
+</fontconfig>
+```
+
+**Verify rendering settings are active:**
+
+```bash
+fc-match --verbose sans | grep -E 'hintstyle|rgba|lcdfilter|antialias|embeddedbitmap'
+```
+
+Expected output:
+```
+antialias: True
+hintstyle: 3    (= hintslight)
+rgba: 1         (= rgb)
+embeddedbitmap: False
+lcdfilter: 1    (= lcddefault)
+```
+
+**Verify substitutions are working:**
+
+```bash
+for family in "Arial" "Calibri" "Cambria" "Georgia" "Comic Sans MS" "Segoe UI"; do
+  echo -n "$family: "
+  fc-match "$family"
+done
+```
+
+### 12.3 Cinnamon desktop font settings
+
+Open **System Settings → Fonts** and set the following. These settings are also written to `~/.config/gtk-3.0/settings.ini` by Cinnamon automatically.
+
+| Setting | Font | Size |
+|---|---|---|
+| Default font | Inter Medium | 11 |
+| Desktop font | Inter Medium | 11 |
+| Document font | Linux Libertine O Regular | 12 |
+| Monospace font | JetBrains Mono Regular | 12 |
+| Window title font | Inter Medium | 11 |
+| Hinting | Slight | — |
+| Antialiasing | Rgba | — |
+| RGBA order | RGB | — |
+
+**Why these fonts:**
+
+Inter Medium was designed specifically for computer screen UI at small sizes. At 11pt on a 1080p display, Regular weight can look thin — Medium adds just enough weight to make labels, menus, and titlebars feel solid without being bold.
+
+Linux Libertine is a high-quality open-source serif designed for long-form reading. It renders beautifully at 12pt and is a significant step up from Liberation Serif for document work.
+
+JetBrains Mono was purpose-built for code editors and terminals — it has increased letter spacing, distinct characters for commonly confused glyphs (0/O, 1/l/I), and excellent hinting at all common terminal sizes.
+
+### 12.4 LibreOffice font settings
+
+For maximum compatibility when exchanging documents with Windows / Microsoft Office users, set LibreOffice's default fonts to metric-compatible equivalents of the MS Office defaults.
+
+Open **Tools → Options → LibreOffice Writer → Basic Fonts (Western)** and set:
+
+| Setting | Font | Size |
+|---|---|---|
+| Default | Carlito | 11pt |
+| Heading | Caladea | 14pt |
+| List | Carlito | 11pt |
+| Caption | Carlito | 10pt |
+| Index | Carlito | 11pt |
+
+**Why Carlito and Caladea:** Microsoft Office has used Calibri as its default body font and Cambria as its default heading font since Office 2007. Carlito is metric-identical to Calibri and Caladea is metric-identical to Cambria — meaning a document created in Word will open in LibreOffice with the same line breaks, page count, and layout, and vice versa. Using Liberation Serif (the LibreOffice default) instead causes text to reflow when documents are exchanged.
+
+---
+
+## 13. Applying Everything & Verifying
 
 Here is a single block you can run after creating all the files above:
 
@@ -1024,13 +1549,21 @@ systemctl is-enabled cups.service cups-browsed.service bluetooth.service
 # Verify Qt theming env vars are active (after relogin)
 echo $QT_QPA_PLATFORMTHEME
 echo $QT_STYLE_OVERRIDE
+
+# Verify font rendering
+fc-match --verbose sans | grep -E 'hintstyle|rgba|lcdfilter|antialias|embeddedbitmap'
+
+# Verify font substitutions
+for family in "Arial" "Calibri" "Cambria" "Georgia" "Comic Sans MS" "Segoe UI"; do
+  echo -n "$family: "; fc-match "$family"
+done
 ```
 
 All settings (except the active MAC address) will also **persist across reboots** automatically — no additional steps needed.
 
 ---
 
-## 13. Quick Reference Cheatsheet
+## 14. Quick Reference Cheatsheet
 
 | File to create/edit | Location | Command to apply |
 |---|---|---|
@@ -1052,6 +1585,9 @@ All settings (except the active MAC address) will also **persist across reboots*
 | Qt theming env vars | `/etc/environment` | Log out and back in |
 | GTK3 settings | `~/.config/gtk-3.0/settings.ini` | Immediate (per-app relaunch) |
 | GTK2 theme name | `~/.gtkrc-2.0` | Immediate (per-app relaunch) |
+| fontconfig | `~/.config/fontconfig/fonts.conf` | `fc-cache -fv` |
+| Cinnamon font settings | — (GUI only) | System Settings → Fonts |
+| LibreOffice fonts | — (GUI only) | Tools → Options → LibreOffice Writer → Basic Fonts |
 | Cinnamon tweaks | — (GUI only) | System Settings / right-click taskbar |
 
 ---
