@@ -32,6 +32,8 @@ Everything to do right after a fresh Ubuntu, Linux Mint, or Ubuntu-based install
 - Disable unnecessary services (CUPS, Bluetooth)
 - Recommended software (Brave, KeePassXC, Zsh, Virt-Manager, and more)
 - Cinnamon desktop tweaks (Linux Mint)
+- Font configuration — rendering quality, metric-compatible MS font substitutions, and recommended system fonts (Inter, JetBrains Mono, Linux Libertine)
+- LibreOffice font setup for maximum MS Office document compatibility
 ---
 ### [Encrypted USB Backup Drive Setup (LUKS2 + ext4)](guides/Encrypted-USB-Backup-LUKS2.md)
 Format a USB drive with strong LUKS2 encryption using argon2id — consistent with a hardened Linux system drive setup.
@@ -39,14 +41,6 @@ Format a USB drive with strong LUKS2 encryption using argon2id — consistent wi
 - ext4 filesystem inside the encrypted container
 - Drive labelling and permission fixes for rsync/file managers
 - Everyday mount/unmount workflow with GNOME Files
----
-### [Linux - Set Default Fonts and Font Aliases with Fontconfig](guides/linux-fontconfig)
-Configure system and web fonts on Linux using **fontconfig** so preferred fonts are used consistently across all applications and websites.
-- Install metric-compatible replacements for Arial, Times New Roman, Calibri, and more
-- Alias common Microsoft font names to open font equivalents (`fonts-croscore`, `fonts-crosextra-*`)
-- Add Noto fallbacks for full Unicode and emoji support
-- Verify font substitution with `fc-match`
-- Per-user (`~/.config/fontconfig/fonts.conf`) and system-wide options
 ---
 ## About
 These are personal reference guides collected while setting up and configuring Linux systems. Shared in case they help others doing similar work.
