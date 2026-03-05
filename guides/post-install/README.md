@@ -1009,14 +1009,16 @@ Most of the fonts below are available directly from the Ubuntu repositories. A f
 sudo apt install -y \
   fonts-liberation \
   fonts-liberation2 \
-  fonts-carlito \
-  fonts-caladea \
+  fonts-croscore \
+  fonts-crosextra-carlito \
+  fonts-crosextra-caladea \
   fonts-dejavu \
   fonts-noto \
   fonts-noto-color-emoji \
   fonts-inter \
   fonts-linuxlibertine \
-  fonts-jetbrains-mono
+  fonts-jetbrains-mono \
+  fonts-texgyre
 ```
 
 **Downloaded manually** — these are not in the Ubuntu repos:
