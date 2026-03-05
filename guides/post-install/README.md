@@ -1470,7 +1470,17 @@ lcdfilter: 1    (= lcddefault)
 **Verify substitutions are working:**
 
 ```bash
-for family in "Arial" "Calibri" "Cambria" "Georgia" "Comic Sans MS" "Segoe UI"; do
+for family in \
+  serif sans-serif monospace \
+  Arial Helvetica "Arial Narrow" \
+  Verdana Tahoma \
+  "Times New Roman" Times \
+  "Courier New" Courier \
+  Calibri Cambria Georgia \
+  "Comic Sans MS" "Comic Sans" \
+  "Segoe UI" \
+  "MS Sans Serif" "Microsoft Sans Serif" "MS Serif" \
+  "Century Gothic" "Palatino Linotype" "Book Antiqua"; do
   echo -n "$family: "
   fc-match "$family"
 done
@@ -1554,7 +1564,17 @@ echo $QT_STYLE_OVERRIDE
 fc-match --verbose sans | grep -E 'hintstyle|rgba|lcdfilter|antialias|embeddedbitmap'
 
 # Verify font substitutions
-for family in "Arial" "Calibri" "Cambria" "Georgia" "Comic Sans MS" "Segoe UI"; do
+for family in \
+  serif sans-serif monospace \
+  Arial Helvetica "Arial Narrow" \
+  Verdana Tahoma \
+  "Times New Roman" Times \
+  "Courier New" Courier \
+  Calibri Cambria Georgia \
+  "Comic Sans MS" "Comic Sans" \
+  "Segoe UI" \
+  "MS Sans Serif" "Microsoft Sans Serif" "MS Serif" \
+  "Century Gothic" "Palatino Linotype" "Book Antiqua"; do
   echo -n "$family: "; fc-match "$family"
 done
 ```
