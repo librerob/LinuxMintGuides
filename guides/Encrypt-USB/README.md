@@ -125,6 +125,28 @@ Look for the `Version:` and `PBKDF:` fields.
 
 ---
 
+## Rename the Drive Label
+
+After setup the drive may show as a UUID (e.g. `e66a71f7-b5eb-4bc2-96d9-8cbf4dcf27c5`) in your file manager. To give it a proper name:
+
+```bash
+# 1. Unmount if currently mounted
+sudo umount /media/$USER/<uuid>
+
+# 2. Open the LUKS container (if not already open)
+sudo cryptsetup open /dev/sdb Backup-Linux
+
+# 3. Set the ext4 label
+sudo e2label /dev/mapper/Backup-Linux Backup-Linux
+
+# 4. Close it
+sudo cryptsetup close Backup-Linux
+```
+
+Replug the drive and it will show as `Backup-Linux` in your file manager.
+
+---
+
 ## ⚠️ Important Reminders
 
 - **Back up your data before running `luksFormat`** — it wipes everything
