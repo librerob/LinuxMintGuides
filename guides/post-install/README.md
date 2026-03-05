@@ -18,8 +18,9 @@ This guide covers everything to do right after a fresh Ubuntu install — system
 8. [Remove Unwanted Packages](#8-remove-unwanted-packages)
 9. [Software to Install](#9-software-to-install)
 10. [Cinnamon Desktop Tweaks](#10-cinnamon-desktop-tweaks)
-11. [Applying Everything & Verifying](#11-applying-everything--verifying)
-12. [Quick Reference Cheatsheet](#12-quick-reference-cheatsheet)
+11. [Unified Qt & GTK Theming](#11-unified-qt--gtk-theming)
+12. [Applying Everything & Verifying](#12-applying-everything--verifying)
+13. [Quick Reference Cheatsheet](#13-quick-reference-cheatsheet)
 
 ---
 
@@ -937,7 +938,97 @@ Right-click the clock in the taskbar → **Configure**
 
 ---
 
-## 11. Applying Everything & Verifying
+## 11. Unified Qt & GTK Theming
+
+### What this does
+
+By default on Linux Mint, Qt applications (such as KeePassXC, qBittorrent, and others) use their own built-in widget style and ignore your GTK theme entirely — appearing light and unstyled while the rest of your desktop is dark. This section makes Qt apps read your GTK2 theme so they match the rest of the desktop. No `qt5ct` or Kvantum required — `qt5-gtk-platformtheme` is already installed on Linux Mint.
+
+### Step 1 — Set environment variables in `/etc/environment`
+
+These two variables tell Qt which theme bridge plugin to load and which widget style to draw with. Both must use `gtk2` — mixing `gtk2` and `gtk3` here causes a segfault.
+
+```bash
+sudo nano /etc/environment
+```
+
+Add these two lines (no `export` keyword — this file uses plain `KEY=value` syntax):
+
+```
+QT_QPA_PLATFORMTHEME=gtk2
+QT_STYLE_OVERRIDE=gtk2
+```
+
+Save and close. These apply system-wide to all users at every login.
+
+### Step 2 — Create `~/.config/gtk-3.0/settings.ini`
+
+Qt's bridge reads font, cursor, and icon settings from the standard GTK3 config file. Cinnamon creates this file automatically but does not always write the theme name into it — add it if missing.
+
+```bash
+mkdir -p ~/.config/gtk-3.0
+nano ~/.config/gtk-3.0/settings.ini
+```
+
+```ini
+[Settings]
+gtk-font-name=Ubuntu Sans Regular 10
+gtk-cursor-theme-name=DMZ-Black
+gtk-icon-theme-name=Mint-Y-Sand
+gtk-theme-name=Mint-Y-Dark-Aqua
+```
+
+> Adjust the font, cursor, icon, and theme values to match whatever you have set in Cinnamon System Settings.
+
+### Step 3 — Add the theme name to `~/.gtkrc-2.0`
+
+The GTK2 widget style (`QT_STYLE_OVERRIDE=gtk2`) reads from `~/.gtkrc-2.0` rather than the GTK3 settings file. Cinnamon creates this file but does not write the theme name into it. Append it:
+
+```bash
+echo 'gtk-theme-name="Mint-Y-Dark-Aqua"' >> ~/.gtkrc-2.0
+```
+
+The file should now look similar to this:
+
+```
+###############################################
+# Created by cinnamon-settings - please do not edit or reformat.
+#
+style "cs-scrollbar-style" {
+}
+class "GtkScrollbar" style "cs-scrollbar-style"
+###############################################
+gtk-theme-name="Mint-Y-Dark-Aqua"
+```
+
+### Step 4 — Log out and back in
+
+The `/etc/environment` variables are only picked up at login. After logging back in, Qt apps will follow your dark GTK theme automatically without any extra flags.
+
+### Verify
+
+Launch any Qt5 app normally and confirm it renders with your dark theme:
+
+```bash
+featherpad &
+```
+
+### Notes on specific apps
+
+Some Qt apps — notably **KeePassXC** — have their own internal theme override that ignores the system entirely. For these, set the theme inside the app: **Tools → Settings → General → Appearance → Application theme → System**. After doing that, the GTK bridge takes effect for those apps too.
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Qt apps still look light after relogin | `/etc/environment` not read | Confirm with `echo $QT_QPA_PLATFORMTHEME` |
+| Qt app segfaults on launch | gtk2/gtk3 conflict | Ensure both variables use `gtk2`, not a mix |
+| Theme applied but wrong colour | `~/.gtkrc-2.0` missing theme name | Re-run the `echo` command in Step 3 |
+| App ignores system theme entirely | App has internal theme override | Set theme to "System" in the app's own preferences |
+
+---
+
+## 12. Applying Everything & Verifying
 
 Here is a single block you can run after creating all the files above:
 
@@ -965,13 +1056,17 @@ sysctl kernel.kptr_restrict kernel.dmesg_restrict net.ipv4.tcp_syncookies vm.mma
 
 # Verify disabled services
 systemctl is-enabled cups.service cups-browsed.service bluetooth.service
+
+# Verify Qt theming env vars are active (after relogin)
+echo $QT_QPA_PLATFORMTHEME
+echo $QT_STYLE_OVERRIDE
 ```
 
 All settings (except the active MAC address) will also **persist across reboots** automatically — no additional steps needed.
 
 ---
 
-## 12. Quick Reference Cheatsheet
+## 13. Quick Reference Cheatsheet
 
 | File to create/edit | Location | Command to apply |
 |---|---|---|
@@ -990,6 +1085,9 @@ All settings (except the active MAC address) will also **persist across reboots*
 | Remove unwanted packages | — (CLI only) | `sudo apt purge warpinator sticky samba-common ...` |
 | Install software | — (CLI only) | `sudo apt install ...` |
 | Set default shell to Zsh | — (CLI only) | `chsh -s $(which zsh)` |
+| Qt theming env vars | `/etc/environment` | Log out and back in |
+| GTK3 settings | `~/.config/gtk-3.0/settings.ini` | Immediate (per-app relaunch) |
+| GTK2 theme name | `~/.gtkrc-2.0` | Immediate (per-app relaunch) |
 | Cinnamon tweaks | — (GUI only) | System Settings / right-click taskbar |
 
 ---
