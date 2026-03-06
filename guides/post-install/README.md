@@ -17,11 +17,12 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 7. [Disable Unnecessary Services](#7-disable-unnecessary-services)
 8. [Remove Unwanted Packages](#8-remove-unwanted-packages)
 9. [Software to Install](#9-software-to-install)
-10. [Cinnamon Desktop Tweaks](#10-cinnamon-desktop-tweaks)
-11. [Unified Qt & GTK Theming](#11-unified-qt--gtk-theming)
-12. [Font Configuration](#12-font-configuration)
-13. [Applying Everything & Verifying](#13-applying-everything--verifying)
-14. [Quick Reference Cheatsheet](#14-quick-reference-cheatsheet)
+10. [Brave Browser](#10-brave-browser)
+11. [Cinnamon Desktop Tweaks](#11-cinnamon-desktop-tweaks)
+12. [Unified Qt & GTK Theming](#12-unified-qt--gtk-theming)
+13. [Font Configuration](#13-font-configuration)
+14. [Applying Everything & Verifying](#14-applying-everything--verifying)
+15. [Quick Reference Cheatsheet](#15-quick-reference-cheatsheet)
 
 ---
 
@@ -848,7 +849,135 @@ Should output `/usr/bin/zsh` or `/bin/zsh`.
 
 ---
 
-## 10. Cinnamon Desktop Tweaks
+## 10. Brave Browser
+
+### What this does
+
+Installs Brave Browser from its official apt repository, then applies a managed policy file to disable telemetry, AI features, crypto/rewards bloat, and other non-essential extras — giving you a cleaner, more privacy-focused browser out of the box.
+
+Policies are enforced via Brave's built-in Group Policy system (the same mechanism used by IT admins). Settings locked by policy show a building/grid icon in Brave's UI and appear greyed out — they cannot be overridden by the user through the browser UI. You can verify all active policies at any time by visiting `brave://policy/`.
+
+### Install Brave
+
+```bash
+sudo apt install curl
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
+  https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+sudo curl -fsSLo /etc/apt/sources.list.d/brave-browser-release.sources \
+  https://brave-browser-apt-release.s3.brave.com/brave-browser.sources
+sudo apt update
+sudo apt install brave-browser
+```
+
+### Apply debloat policies
+
+Create the managed policies directory and drop in the policy file:
+
+```bash
+sudo mkdir -p /etc/brave/policies/managed/
+```
+
+Create `/etc/brave/policies/managed/policies.json` with the following content:
+
+```json
+{
+  "BraveAIChatEnabled": false,
+  "BraveRewardsDisabled": true,
+  "BraveWalletDisabled": true,
+  "BraveVPNDisabled": true,
+  "TorDisabled": true,
+  "BraveP3AEnabled": false,
+  "BraveStatsPingEnabled": false,
+  "BraveWebDiscoveryEnabled": false,
+  "BraveNewsDisabled": true,
+  "BraveTalkDisabled": true,
+  "BraveSpeedreaderEnabled": false,
+  "BraveWaybackMachineEnabled": false,
+  "BravePlaylistEnabled": false,
+  "SyncDisabled": false,
+  "PasswordManagerEnabled": false,
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "DnsOverHttpsMode": "automatic"
+}
+```
+
+**Policy breakdown:**
+
+| Policy | Effect |
+|---|---|
+| `BraveAIChatEnabled: false` | Disables Leo AI assistant |
+| `BraveRewardsDisabled / WalletDisabled / VPNDisabled / TorDisabled: true` | Turns off Brave's crypto and monetisation suite |
+| `BraveP3AEnabled / BraveStatsPingEnabled / BraveWebDiscoveryEnabled: false` | Disables all telemetry and usage reporting |
+| `BraveNewsDisabled / BraveTalkDisabled / BraveSpeedreaderEnabled / BraveWaybackMachineEnabled / BravePlaylistEnabled` | Removes sidebar clutter features |
+| `SyncDisabled: false` | Leaves Sync **enabled** — disable manually if you don't want it |
+| `PasswordManagerEnabled / AutofillAddressEnabled / AutofillCreditCardEnabled: false` | Disables the built-in password manager and autofill (use KeePassXC instead) |
+| `DnsOverHttpsMode: automatic` | Uses secure DNS when available, falls back to your system/OS DNS resolver — no hardcoded provider |
+
+### DNS provider options
+
+By default the policy uses `"DnsOverHttpsMode": "automatic"` with no hardcoded provider — Brave will use secure DNS when available and fall back to your OS resolver. If you want to force a specific provider instead, set `"DnsOverHttpsMode": "secure"` and add a `"DnsOverHttpsTemplates"` line with your chosen URL.
+
+**Available modes:**
+
+| Mode | Behaviour |
+|---|---|
+| `"automatic"` | Use secure DNS when available, fall back to OS/system resolver. No `DnsOverHttpsTemplates` needed. |
+| `"secure"` | Always use the provider in `DnsOverHttpsTemplates`. Fails if the provider is unreachable (no fallback). |
+| `"off"` | Disable DoH entirely — use OS resolver as-is. Remove `DnsOverHttpsTemplates` too. |
+
+**Popular DoH providers:**
+
+| Provider | Focus | `DnsOverHttpsTemplates` value |
+|---|---|---|
+| Cloudflare | Speed, privacy | `https://cloudflare-dns.com/dns-query` |
+| Cloudflare (malware blocking) | Speed + blocks malware | `https://security.cloudflare-dns.com/dns-query` |
+| Cloudflare (family) | Blocks malware + adult content | `https://family.cloudflare-dns.com/dns-query` |
+| Quad9 | Privacy + malware blocking | `https://dns.quad9.net/dns-query` |
+| AdGuard | Privacy + ad/tracker blocking | `https://dns.adguard-dns.com/dns-query` |
+| NextDNS | Fully customisable (account required) | `https://dns.nextdns.io/your-id` |
+| Google | Speed, reliability | `https://dns.google/dns-query` |
+
+**Example — force Cloudflare, no fallback:**
+
+```json
+{
+  ...
+  "DnsOverHttpsMode": "secure",
+  "DnsOverHttpsTemplates": "https://cloudflare-dns.com/dns-query"
+}
+```
+
+**Example — force Quad9, no fallback:**
+
+```json
+{
+  ...
+  "DnsOverHttpsMode": "secure",
+  "DnsOverHttpsTemplates": "https://dns.quad9.net/dns-query"
+}
+```
+
+**Example — disable DoH, use OS resolver:**
+
+```json
+{
+  ...
+  "DnsOverHttpsMode": "off"
+}
+```
+
+> **Note:** When `DnsOverHttpsMode` is set to `"secure"` with a hardcoded provider, the setting will appear locked (greyed out with a policy icon) in Brave's Security settings — you won't be able to change it from the UI. Use `"automatic"` if you want to keep the setting adjustable.
+
+### Restart Brave and verify
+
+Restart Brave, then visit `brave://policy/` to confirm all policies are loaded and showing no errors.
+
+> **Note:** Brave Shields and Sync are left untouched by these policies. Configure them to your preference in Brave Settings.
+
+---
+
+## 11. Cinnamon Desktop Tweaks
 
 > **Skip this section if you are not using the Cinnamon desktop** (e.g. Linux Mint).
 
@@ -915,7 +1044,7 @@ Right-click the clock in the taskbar → **Configure**
 
 ---
 
-## 11. Unified Qt & GTK Theming
+## 12. Unified Qt & GTK Theming
 
 ### What this does
 
@@ -993,13 +1122,13 @@ The `/etc/environment` variables are only picked up at login. After logging back
 
 ---
 
-## 12. Font Configuration
+## 13. Font Configuration
 
 Good font configuration on Linux Mint covers three things: rendering quality (how fonts are drawn on screen), metric-compatible substitutions (so documents and web pages that request Windows fonts render with correct spacing), and choosing readable system fonts for the desktop UI.
 
 Linux Mint Cinnamon ships with sensible rendering defaults, but the substitution rules and font choices below improve on them meaningfully.
 
-### 12.1 Install fonts
+### 13.1 Install fonts
 
 Most of the fonts below are available directly from the Ubuntu repositories. A few must be downloaded manually as noted.
 
@@ -1046,7 +1175,7 @@ fc-match "Comic Neue"
 fc-match "Selawik"
 ```
 
-### 12.2 fontconfig — `~/.config/fontconfig/fonts.conf`
+### 13.2 fontconfig — `~/.config/fontconfig/fonts.conf`
 
 This file controls rendering quality and sets up metric-compatible substitutions so that documents and web pages requesting Windows fonts get correctly-sized free alternatives instead of random fallbacks.
 
@@ -1082,100 +1211,59 @@ Place it at `~/.config/fontconfig/fonts.conf` (per-user) or `/etc/fonts/local.co
        Test your subpixel layout at: https://www.lagom.nl/lcd-test/subpixel.php
        ============================================================ -->
 
-  <!-- Enable antialiasing (always on for LCD) -->
   <match target="font">
-    <edit name="antialias" mode="assign">
-      <bool>true</bool>
-    </edit>
+    <edit name="antialias" mode="assign"><bool>true</bool></edit>
   </match>
 
-  <!-- Enable hinting (BCI uses font's own hint instructions) -->
   <match target="font">
-    <edit name="hinting" mode="assign">
-      <bool>true</bool>
-    </edit>
+    <edit name="hinting" mode="assign"><bool>true</bool></edit>
   </match>
 
-  <!-- hintslight: best balance of sharpness vs shape preservation.
-       Options: hintnone | hintslight | hintmedium | hintfull
-         hintslight = slightly fuzzy but true to the font design (recommended)
-         hintmedium = good middle ground on 1080p screens
-         hintfull   = crispest / most "Windows-like", distorts letterforms -->
   <match target="font">
-    <edit name="hintstyle" mode="assign">
-      <const>hintslight</const>
-    </edit>
+    <edit name="hintstyle" mode="assign"><const>hintslight</const></edit>
   </match>
 
-  <!-- Subpixel layout: rgb = most common modern monitor arrangement -->
   <match target="font">
-    <edit name="rgba" mode="assign">
-      <const>rgb</const>
-    </edit>
+    <edit name="rgba" mode="assign"><const>rgb</const></edit>
   </match>
 
-  <!-- LCD filter: reduces color fringing from subpixel rendering.
-       lcddefault is the standard ClearType-equivalent filter.
-       Use lcdlight if fonts appear too bold or blurry. -->
   <match target="font">
-    <edit name="lcdfilter" mode="assign">
-      <const>lcddefault</const>
-    </edit>
+    <edit name="lcdfilter" mode="assign"><const>lcddefault</const></edit>
   </match>
 
-  <!-- Disable autohinter — use the font's own BCI hints instead.
-       Autohinter is mainly useful for poorly-hinted fonts. -->
   <match target="font">
-    <edit name="autohint" mode="assign">
-      <bool>false</bool>
-    </edit>
+    <edit name="autohint" mode="assign"><bool>false</bool></edit>
   </match>
 
-  <!-- Disable embedded bitmaps for scalable fonts.
-       Avoids pixelated rendering at certain sizes (Calibri, Cambria, Monaco etc.) -->
   <match target="font">
-    <edit name="embeddedbitmap" mode="assign">
-      <bool>false</bool>
-    </edit>
+    <edit name="embeddedbitmap" mode="assign"><bool>false</bool></edit>
   </match>
 
-  <!-- Re-enable embedded bitmaps for emoji (required for correct rendering) -->
   <match target="font">
-    <test name="family" qual="any">
-      <string>Noto Color Emoji</string>
-    </test>
-    <edit name="embeddedbitmap" mode="assign">
-      <bool>true</bool>
-    </edit>
+    <test name="family" qual="any"><string>Noto Color Emoji</string></test>
+    <edit name="embeddedbitmap" mode="assign"><bool>true</bool></edit>
   </match>
 
 
   <!-- ============================================================
        SECTION 2: DEFAULT FONT FAMILIES
-       Sets the preferred fonts for the three universal aliases.
-       Applications requesting "serif", "sans-serif", or "monospace"
-       will get these first.
-
-       Liberation fonts are metric-compatible with Times New Roman,
-       Arial, and Courier New — web pages and documents render
-       with correct spacing even without MS fonts installed.
        ============================================================ -->
 
   <alias>
     <family>sans-serif</family>
     <prefer>
-      <family>Liberation Sans</family>    <!-- Arial metric-compatible        -->
-      <family>Arimo</family>              <!-- Chrome OS / Apache 2.0 fallback -->
-      <family>DejaVu Sans</family>        <!-- Wide Unicode coverage           -->
-      <family>Noto Sans</family>          <!-- Ultimate Unicode fallback        -->
+      <family>Liberation Sans</family>
+      <family>Arimo</family>
+      <family>DejaVu Sans</family>
+      <family>Noto Sans</family>
     </prefer>
   </alias>
 
   <alias>
     <family>serif</family>
     <prefer>
-      <family>Liberation Serif</family>   <!-- Times New Roman metric-compatible -->
-      <family>Tinos</family>              <!-- Chrome OS serif fallback          -->
+      <family>Liberation Serif</family>
+      <family>Tinos</family>
       <family>DejaVu Serif</family>
       <family>Noto Serif</family>
     </prefer>
@@ -1184,14 +1272,13 @@ Place it at `~/.config/fontconfig/fonts.conf` (per-user) or `/etc/fonts/local.co
   <alias>
     <family>monospace</family>
     <prefer>
-      <family>Liberation Mono</family>    <!-- Courier New metric-compatible     -->
-      <family>DejaVu Sans Mono</family>   <!-- Excellent coding font             -->
-      <family>Cousine</family>            <!-- Chrome OS mono fallback           -->
+      <family>Liberation Mono</family>
+      <family>DejaVu Sans Mono</family>
+      <family>Cousine</family>
       <family>Noto Sans Mono</family>
     </prefer>
   </alias>
 
-  <!-- "sans" alias used by some older apps -->
   <alias>
     <family>sans</family>
     <prefer>
@@ -1200,211 +1287,134 @@ Place it at `~/.config/fontconfig/fonts.conf` (per-user) or `/etc/fonts/local.co
     </prefer>
   </alias>
 
-  <!-- Emoji -->
   <alias>
     <family>emoji</family>
-    <prefer>
-      <family>Noto Color Emoji</family>
-    </prefer>
+    <prefer><family>Noto Color Emoji</family></prefer>
   </alias>
 
 
   <!-- ============================================================
        SECTION 3: METRIC-COMPATIBLE SUBSTITUTIONS
-       Maps commonly-requested MS / PostScript font names to free
-       metric-compatible equivalents. Documents and web pages that
-       request these fonts render with correct line lengths and spacing.
-
-       Based on fontconfig's 30-metric-aliases.conf and the
-       Arch Wiki metric-compatible fonts table.
        ============================================================ -->
 
-  <!-- Arial → Liberation Sans (exact metric match) -->
   <match target="pattern">
     <test name="family" qual="any"><string>Arial</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Sans</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Sans</string></edit>
   </match>
 
-  <!-- Helvetica → Liberation Sans -->
   <match target="pattern">
     <test name="family" qual="any"><string>Helvetica</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Sans</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Sans</string></edit>
   </match>
 
-  <!-- Arial Narrow → Liberation Sans Narrow (install: ttf-liberation-sans-narrow AUR) -->
   <match target="pattern">
     <test name="family" qual="any"><string>Arial Narrow</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Sans Narrow</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Sans Narrow</string></edit>
   </match>
 
-  <!-- Times / Times New Roman → Liberation Serif -->
   <match target="pattern">
     <test name="family" qual="any"><string>Times New Roman</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Serif</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Serif</string></edit>
   </match>
+
   <match target="pattern">
     <test name="family" qual="any"><string>Times</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Serif</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Serif</string></edit>
   </match>
 
-  <!-- Courier / Courier New → Liberation Mono -->
   <match target="pattern">
     <test name="family" qual="any"><string>Courier New</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Mono</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Mono</string></edit>
   </match>
+
   <match target="pattern">
     <test name="family" qual="any"><string>Courier</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Mono</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Mono</string></edit>
   </match>
 
-  <!-- Calibri → Carlito (purpose-built metric-compatible replacement) -->
   <match target="pattern">
     <test name="family" qual="any"><string>Calibri</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Carlito</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Carlito</string></edit>
   </match>
 
-  <!-- Cambria → Caladea (purpose-built metric-compatible replacement) -->
   <match target="pattern">
     <test name="family" qual="any"><string>Cambria</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Caladea</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Caladea</string></edit>
   </match>
 
-  <!-- Georgia → Gelasio (metric-compatible, SIL OFL, by Eben Sorkin) -->
   <match target="pattern">
     <test name="family" qual="any"><string>Georgia</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Gelasio</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Gelasio</string></edit>
   </match>
 
-  <!-- Segoe UI → Selawik (Microsoft's own open-source alternative) -->
   <match target="pattern">
     <test name="family" qual="any"><string>Segoe UI</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Selawik</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Selawik</string></edit>
   </match>
 
-  <!-- MS Sans Serif / Microsoft Sans Serif → Liberation Sans -->
   <match target="pattern">
     <test name="family" qual="any"><string>MS Sans Serif</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Sans</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Sans</string></edit>
   </match>
+
   <match target="pattern">
     <test name="family" qual="any"><string>Microsoft Sans Serif</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Sans</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Sans</string></edit>
   </match>
 
-  <!-- MS Serif → Liberation Serif -->
   <match target="pattern">
     <test name="family" qual="any"><string>MS Serif</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Liberation Serif</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Liberation Serif</string></edit>
   </match>
 
-  <!-- Tahoma → Wine Tahoma (install: ttf-tahoma from AUR)
-       Note: Wine Tahoma stores the name "Tahoma" in its TTF data,
-       so no substitution rule is needed if it is installed. -->
-
-  <!-- Century Gothic → TeX Gyre Adventor (PostScript ITC Avant Garde compatible) -->
   <match target="pattern">
     <test name="family" qual="any"><string>Century Gothic</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>TeX Gyre Adventor</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>TeX Gyre Adventor</string></edit>
   </match>
 
-  <!-- Comic Sans MS → Comic Neue (cleaner handwritten style, same feel) -->
   <match target="pattern">
     <test name="family" qual="any"><string>Comic Sans MS</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Comic Neue</string>
-    </edit>
-  </match>
-  <match target="pattern">
-    <test name="family" qual="any"><string>Comic Sans</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>Comic Neue</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>Comic Neue</string></edit>
   </match>
 
-  <!-- Palatino / Book Antiqua → TeX Gyre Pagella -->
+  <match target="pattern">
+    <test name="family" qual="any"><string>Comic Sans</string></test>
+    <edit name="family" mode="assign" binding="same"><string>Comic Neue</string></edit>
+  </match>
+
   <match target="pattern">
     <test name="family" qual="any"><string>Palatino Linotype</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>TeX Gyre Pagella</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>TeX Gyre Pagella</string></edit>
   </match>
+
   <match target="pattern">
     <test name="family" qual="any"><string>Book Antiqua</string></test>
-    <edit name="family" mode="assign" binding="same">
-      <string>TeX Gyre Pagella</string>
-    </edit>
+    <edit name="family" mode="assign" binding="same"><string>TeX Gyre Pagella</string></edit>
   </match>
 
 
   <!-- ============================================================
        SECTION 4: PER-FONT RENDERING OVERRIDES
-       Fine-tune hinting for specific fonts that benefit from it.
        ============================================================ -->
 
-  <!-- Noto fonts have good hinting data, hintfull gives crisp results -->
   <match target="font">
-    <test name="family" qual="any">
-      <string>Noto Sans</string>
-    </test>
-    <edit name="hintstyle" mode="assign">
-      <const>hintfull</const>
-    </edit>
-  </match>
-  <match target="font">
-    <test name="family" qual="any">
-      <string>Noto Serif</string>
-    </test>
-    <edit name="hintstyle" mode="assign">
-      <const>hintfull</const>
-    </edit>
+    <test name="family" qual="any"><string>Noto Sans</string></test>
+    <edit name="hintstyle" mode="assign"><const>hintfull</const></edit>
   </match>
 
-  <!-- Liberation fonts also have solid hinting -->
   <match target="font">
-    <test name="family" qual="any">
-      <string>Liberation Sans</string>
-    </test>
-    <edit name="hintstyle" mode="assign">
-      <const>hintfull</const>
-    </edit>
+    <test name="family" qual="any"><string>Noto Serif</string></test>
+    <edit name="hintstyle" mode="assign"><const>hintfull</const></edit>
   </match>
+
   <match target="font">
-    <test name="family" qual="any">
-      <string>Liberation Mono</string>
-    </test>
-    <edit name="hintstyle" mode="assign">
-      <const>hintfull</const>
-    </edit>
+    <test name="family" qual="any"><string>Liberation Sans</string></test>
+    <edit name="hintstyle" mode="assign"><const>hintfull</const></edit>
+  </match>
+
+  <match target="font">
+    <test name="family" qual="any"><string>Liberation Mono</string></test>
+    <edit name="hintstyle" mode="assign"><const>hintfull</const></edit>
   </match>
 
 
@@ -1414,42 +1424,11 @@ Place it at `~/.config/fontconfig/fonts.conf` (per-user) or `/etc/fonts/local.co
        Uncomment this block if you use a HiDPI screen.
 
   <match target="font">
-    <edit name="hinting" mode="assign">
-      <bool>false</bool>
-    </edit>
+    <edit name="hinting" mode="assign"><bool>false</bool></edit>
   </match>
   <match target="font">
-    <edit name="hintstyle" mode="assign">
-      <const>hintnone</const>
-    </edit>
+    <edit name="hintstyle" mode="assign"><const>hintnone</const></edit>
   </match>
-       ============================================================ -->
-
-
-  <!-- ============================================================
-       SECTION 6: NOTES FOR GTK4 / XRESOURCES
-
-       GTK4 / libadwaita apps (GNOME, etc.) IGNORE fontconfig hinting.
-       To fix, add to ~/.config/gtk-4.0/settings.ini:
-         [Settings]
-         gtk-hint-font-metrics=true
-         gtk-font-rendering=manual
-
-       For non-GNOME desktops (and apps that use Xft directly),
-       add to ~/.Xresources:
-         Xft.antialias: 1
-         Xft.hinting:   1
-         Xft.hintstyle: hintslight
-         Xft.rgba:      rgb
-         Xft.lcdfilter: lcddefault
-       Then run: xrdb -merge ~/.Xresources
-
-       For incorrect hinting in GTK3 apps outside GNOME/Plasma,
-       install xsettingsd and configure ~/.xsettingsd:
-         Xft/Hinting 1
-         Xft/HintStyle "hintslight"
-         Xft/Antialias 1
-         Xft/RGBA "rgb"
        ============================================================ -->
 
 </fontconfig>
@@ -1459,15 +1438,6 @@ Place it at `~/.config/fontconfig/fonts.conf` (per-user) or `/etc/fonts/local.co
 
 ```bash
 fc-match --verbose sans | grep -E 'hintstyle|rgba|lcdfilter|antialias|embeddedbitmap'
-```
-
-Expected output:
-```
-antialias: True
-hintstyle: 3    (= hintslight)
-rgba: 1         (= rgb)
-embeddedbitmap: False
-lcdfilter: 1    (= lcddefault)
 ```
 
 **Verify substitutions are working:**
@@ -1489,9 +1459,9 @@ for family in \
 done
 ```
 
-### 12.3 Cinnamon desktop font settings
+### 13.3 Cinnamon desktop font settings
 
-Open **System Settings → Fonts** and set the following. These settings are also written to `~/.config/gtk-3.0/settings.ini` by Cinnamon automatically.
+Open **System Settings → Fonts** and set the following:
 
 | Setting | Font | Size |
 |---|---|---|
@@ -1504,17 +1474,7 @@ Open **System Settings → Fonts** and set the following. These settings are als
 | Antialiasing | Rgba | — |
 | RGBA order | RGB | — |
 
-**Why these fonts:**
-
-Inter Medium was designed specifically for computer screen UI at small sizes. At 11pt on a 1080p display, Regular weight can look thin — Medium adds just enough weight to make labels, menus, and titlebars feel solid without being bold.
-
-Linux Libertine is a high-quality open-source serif designed for long-form reading. It renders beautifully at 12pt and is a significant step up from Liberation Serif for document work.
-
-JetBrains Mono was purpose-built for code editors and terminals — it has increased letter spacing, distinct characters for commonly confused glyphs (0/O, 1/l/I), and excellent hinting at all common terminal sizes.
-
-### 12.4 LibreOffice font settings
-
-For maximum compatibility when exchanging documents with Windows / Microsoft Office users, set LibreOffice's default fonts to metric-compatible equivalents of the MS Office defaults.
+### 13.4 LibreOffice font settings
 
 Open **Tools → Options → LibreOffice Writer → Basic Fonts (Western)** and set:
 
@@ -1526,11 +1486,9 @@ Open **Tools → Options → LibreOffice Writer → Basic Fonts (Western)** and 
 | Caption | Carlito | 10pt |
 | Index | Carlito | 11pt |
 
-**Why Carlito and Caladea:** Microsoft Office has used Calibri as its default body font and Cambria as its default heading font since Office 2007. Carlito is metric-identical to Calibri and Caladea is metric-identical to Cambria — meaning a document created in Word will open in LibreOffice with the same line breaks, page count, and layout, and vice versa. Using Liberation Serif (the LibreOffice default) instead causes text to reflow when documents are exchanged.
-
 ---
 
-## 13. Applying Everything & Verifying
+## 14. Applying Everything & Verifying
 
 Here is a single block you can run after creating all the files above:
 
@@ -1580,13 +1538,16 @@ for family in \
   "Century Gothic" "Palatino Linotype" "Book Antiqua"; do
   echo -n "$family: "; fc-match "$family"
 done
+
+# Verify Brave policies
+# Open Brave and visit brave://policy/
 ```
 
 All settings (except the active MAC address) will also **persist across reboots** automatically — no additional steps needed.
 
 ---
 
-## 14. Quick Reference Cheatsheet
+## 15. Quick Reference Cheatsheet
 
 | File to create/edit | Location | Command to apply |
 |---|---|---|
@@ -1604,6 +1565,8 @@ All settings (except the active MAC address) will also **persist across reboots*
 | Disable casper-md5check | — (CLI only) | `sudo systemctl disable casper-md5check.service` |
 | Remove unwanted packages | — (CLI only) | `sudo apt purge warpinator sticky samba-common ...` |
 | Install software | — (CLI only) | `sudo apt install ...` |
+| Install Brave | — (CLI only) | See Section 10 |
+| Brave policies | `/etc/brave/policies/managed/policies.json` | Restart Brave, verify at `brave://policy/` |
 | Set default shell to Zsh | — (CLI only) | `chsh -s $(which zsh)` |
 | Qt theming env vars | `/etc/environment` | Log out and back in |
 | GTK3 settings | `~/.config/gtk-3.0/settings.ini` | Immediate (per-app relaunch) |
