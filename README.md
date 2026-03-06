@@ -4,6 +4,11 @@ A collection of personal installation and configuration guides for **Linux Mint*
 
 > Warning: Some guides involve **wiping drives entirely**. Always back up your data before following any installation guide.
 
+## Preview
+
+![Linux Mint desktop with dark GTK theme, Goodvibes radio player, and Cinnamon taskbar](assets/cinnamon-dekstop.png)
+
+*A clean Linux Mint Cinnamon setup — dark theme, minimal taskbar, Goodvibes playing in the background.*
 ---
 
 ## Guides
