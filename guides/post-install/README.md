@@ -891,7 +891,7 @@ Create `/etc/brave/policies/managed/policies.json` with the following content:
 | `BraveRewardsDisabled / WalletDisabled / VPNDisabled / TorDisabled: true` | Turns off Brave's crypto and monetisation suite |
 | `BraveP3AEnabled / BraveStatsPingEnabled / BraveWebDiscoveryEnabled: false` | Disables all telemetry and usage reporting |
 | `BraveNewsDisabled / BraveTalkDisabled / BraveSpeedreaderEnabled / BraveWaybackMachineEnabled / BravePlaylistEnabled` | Removes sidebar clutter features |
-| `SyncDisabled: false` | Leaves Sync **enabled** — disable manually if you don't want it |
+| `SyncDisabled: false` | Leaves Sync **disabled** — enable manually if you want it |
 | `PasswordManagerEnabled / AutofillAddressEnabled / AutofillCreditCardEnabled: false` | Disables the built-in password manager and autofill (use KeePassXC instead) |
 | `DnsOverHttpsMode: automatic` | Uses secure DNS when available, falls back to your system/OS DNS resolver — no hardcoded provider |
 
