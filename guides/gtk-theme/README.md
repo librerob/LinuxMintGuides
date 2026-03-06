@@ -30,13 +30,19 @@ The upstream Flat Remix GTK theme was designed primarily for GNOME. Newer versio
 
 ### 1. Clone or download the theme
 
-Clone this repository directly into your themes folder:
+Clone from GitHub:
 
 ```bash
 git clone https://github.com/librerob/LinuxMintGuides.git /tmp/LinuxMintGuides
 ```
 
-Or download the `.tar.xz` from the Releases section and extract it.
+Or from Codeberg:
+
+```bash
+git clone https://codeberg.org/librerob/LinuxMintGuides.git /tmp/LinuxMintGuides
+```
+
+The theme files are located under `guides/gtk-theme/` in the repository. You can also browse them directly at [codeberg.org/librerob/LinuxMintGuides/src/branch/main/guides/gtk-theme](https://codeberg.org/librerob/LinuxMintGuides/src/branch/main/guides/gtk-theme).
 
 ### 2. Copy the theme to your themes directory
 
