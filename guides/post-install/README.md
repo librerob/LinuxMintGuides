@@ -875,7 +875,7 @@ Create `/etc/brave/policies/managed/policies.json` with the following content:
   "BraveSpeedreaderEnabled": false,
   "BraveWaybackMachineEnabled": false,
   "BravePlaylistEnabled": false,
-  "SyncDisabled": false,
+  "SyncDisabled": true,
   "PasswordManagerEnabled": false,
   "AutofillAddressEnabled": false,
   "AutofillCreditCardEnabled": false,
