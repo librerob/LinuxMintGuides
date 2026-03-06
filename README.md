@@ -62,8 +62,9 @@ Everything to do right after a fresh Ubuntu, Linux Mint, or Ubuntu-based install
 - UFW firewall setup (including QEMU/Virt-Manager support)
 - Disable unnecessary services (CUPS, Bluetooth, OpenVPN, ModemManager, kerneloops, casper-md5check)
 - Remove unwanted packages (warpinator, Samba, Rhythmbox, Hypnotix, and more)
-- Recommended software (Brave, KeePassXC, Zsh, Virt-Manager, and more)
+- Recommended software (Brave, KeePassXC, Goodvibes, Liferea, Tor Browser, Virt-Manager, and more)
 - KVM group setup and Windows 10 VM XML reference with detailed explanations
+- Zsh configuration — default shell setup, fast-syntax-highlighting plugin, full `.zshrc` with coloured prompt, history, completion, aliases, and rsync backup commands
 - Cinnamon desktop tweaks (Linux Mint)
 - Font configuration — rendering quality, metric-compatible MS font substitutions, and recommended system fonts
 - LibreOffice font setup for maximum MS Office document compatibility
