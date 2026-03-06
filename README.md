@@ -8,7 +8,7 @@ A collection of personal installation and configuration guides for **Linux Mint*
 
 ## Guides
 
-### [Linux Mint & Ubuntu Derivatives - Btrfs Root + LUKS2](guides/LinuxMint-Zorin-Btrfs-Root-Luks2.md)
+### [Linux Mint & Ubuntu Derivatives - Btrfs Root + LUKS2](guides/linuxmint-btrfs-root-luks2/)
 
 Install **Linux Mint** or other Ubuntu-based derivatives with LUKS2 encrypted root on a Btrfs filesystem.
 
@@ -20,7 +20,18 @@ Install **Linux Mint** or other Ubuntu-based derivatives with LUKS2 encrypted ro
 
 ---
 
-### [LMDE + LUKS + Btrfs + Subvolumes](guides/LMDE-BTRFS-LUKS.md)
+### [Linux Mint & Ubuntu Derivatives - Btrfs Root + LUKS2 (BIOS)](guides/linuxmint-btrfs-root-luks2-bios/)
+
+Same as above but for **BIOS/GPT** systems instead of UEFI.
+
+- BIOS + GPT with 1 MiB BIOS boot partition
+- LUKS2 with Argon2id key derivation
+- Btrfs with `@` and `@home` subvolumes
+- zram swap, Timeshift + grml-rescueboot
+
+---
+
+### [LMDE + LUKS + Btrfs + Subvolumes](guides/lmde-btrfs-luks/)
 
 Install **Linux Mint Debian Edition (LMDE)** with encrypted root (LUKS) and a Btrfs filesystem using separate `@` and `@home` subvolumes.
 
@@ -31,7 +42,7 @@ Install **Linux Mint Debian Edition (LMDE)** with encrypted root (LUKS) and a Bt
 
 ---
 
-### [Ubuntu & Derivatives - Auto-unlock Secondary LUKS Drive at Boot](guides/Ubuntu-Secondary-LUKS.md)
+### [Ubuntu & Derivatives - Auto-unlock Secondary LUKS Drive at Boot](guides/unlock-secondary-harddrive-luks/)
 
 Set up automatic unlocking of a **secondary LUKS-encrypted hard drive** at boot on Ubuntu, Linux Mint, and other Ubuntu-based derivatives, using `/etc/crypttab` and a keyfile.
 
@@ -40,31 +51,33 @@ Set up automatic unlocking of a **secondary LUKS-encrypted hard drive** at boot 
 
 ---
 
-### [Ubuntu & Derivatives - Post-Install Guide](guides/ubuntu-post-install.md)
+### [Ubuntu & Derivatives - Post-Install Guide](guides/post-install/)
 
 Everything to do right after a fresh Ubuntu, Linux Mint, or Ubuntu-based install.
 
 - Kernel hardening and system tuning via `sysctl`
+- Swappiness tuning for better desktop responsiveness
 - Cloudflare DNS over TLS with `systemd-resolved`
 - Random MAC address at every boot via NetworkManager
 - UFW firewall setup (including QEMU/Virt-Manager support)
 - Disable unnecessary services (CUPS, Bluetooth, OpenVPN, ModemManager, kerneloops, casper-md5check)
 - Remove unwanted packages (warpinator, Samba, Rhythmbox, Hypnotix, and more)
 - Recommended software (Brave, KeePassXC, Zsh, Virt-Manager, and more)
-- KVM group setup and Windows 10 VM XML reference
+- KVM group setup and Windows 10 VM XML reference with detailed explanations
 - Cinnamon desktop tweaks (Linux Mint)
+- Font configuration — rendering quality, metric-compatible MS font substitutions, and recommended system fonts
+- LibreOffice font setup for maximum MS Office document compatibility
 
 ---
 
-### [Linux - Set Default Fonts and Font Aliases with Fontconfig](guides/linux-fontconfig)
+### [Encrypted USB Backup Drive Setup (LUKS2 + ext4)](guides/Encrypt-USB/)
 
-Configure system and web fonts on Linux using **fontconfig** so preferred fonts are used consistently across all applications and websites.
+Format a USB drive with strong LUKS2 encryption using Argon2id — consistent with a hardened Linux system drive setup.
 
-- Install metric-compatible replacements for Arial, Times New Roman, Calibri, and more
-- Alias common Microsoft font names to open font equivalents (`fonts-croscore`, `fonts-crosextra-*`)
-- Add Noto fallbacks for full Unicode and emoji support
-- Verify font substitution with `fc-match`
-- Per-user (`~/.config/fontconfig/fonts.conf`) and system-wide options
+- LUKS2 with Argon2id KDF (`--iter-time 4000`)
+- ext4 filesystem inside the encrypted container
+- Drive labelling and permission fixes for rsync/file managers
+- Everyday mount/unmount workflow with GNOME Files
 
 ---
 
