@@ -1341,7 +1341,7 @@ nano ~/.config/gtk-3.0/settings.ini
 [Settings]
 gtk-font-name=Inter Medium 11
 gtk-cursor-theme-name=DMZ-Black
-gtk-icon-theme-name=Mint-Y-Sand
+gtk-icon-theme-name=Papirus-Dark
 gtk-theme-name=Flat-Remix-GTK-Blue-Darkest-Solid-Cinnamon-Patch
 ```
 
