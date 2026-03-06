@@ -18,11 +18,12 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 8. [Remove Unwanted Packages](#8-remove-unwanted-packages)
 9. [Software to Install](#9-software-to-install)
 10. [Brave Browser](#10-brave-browser)
-11. [Cinnamon Desktop Tweaks](#11-cinnamon-desktop-tweaks)
-12. [Unified Qt & GTK Theming](#12-unified-qt--gtk-theming)
-13. [Font Configuration](#13-font-configuration)
-14. [Applying Everything & Verifying](#14-applying-everything--verifying)
-15. [Quick Reference Cheatsheet](#15-quick-reference-cheatsheet)
+11. [Zsh Configuration](#11-zsh-configuration)
+12. [Cinnamon Desktop Tweaks](#12-cinnamon-desktop-tweaks)
+13. [Unified Qt & GTK Theming](#13-unified-qt--gtk-theming)
+14. [Font Configuration](#14-font-configuration)
+15. [Applying Everything & Verifying](#15-applying-everything--verifying)
+16. [Quick Reference Cheatsheet](#16-quick-reference-cheatsheet)
 
 ---
 
@@ -590,22 +591,20 @@ These packages are all available directly from Ubuntu's repos. Install them in o
 ```bash
 sudo apt update && sudo apt install -y \
   geary \
-  shortwave \
+  goodvibes \
   grsync \
   keepassxc \
-  gnome-feeds \
+  liferea \
   gimp \
   bleachbit \
-  libreoffice \
   zsh \
-  celluloid \
   ffmpegthumbnailer \
   ffmpeg \
   synaptic \
-  transmission-gtk \
   grml-rescueboot \
   bridge-utils \
-  virt-manager
+  virt-manager \
+  torbrowser-launcher
 ```
 
 **What each package does:**
@@ -613,22 +612,22 @@ sudo apt update && sudo apt install -y \
 | Package | Description |
 |---|---|
 | `geary` | Clean, modern GNOME email client |
-| `shortwave` | Internet radio player for GNOME |
+| `goodvibes` | Lightweight internet radio player for GTK desktops |
 | `grsync` | GUI frontend for rsync — great for backups |
 | `keepassxc` | Offline, open-source password manager |
-| `gnome-feeds` | RSS/Atom feed reader for GNOME |
+| `liferea` | RSS/Atom feed reader — desktop client with offline reading |
 | `gimp` | Full-featured image editor |
 | `bleachbit` | System cleaner — frees disk space, clears caches and logs |
-| `libreoffice` | Full office suite (Writer, Calc, Impress, etc.) |
 | `zsh` | Z shell — a powerful, highly customisable shell |
-| `celluloid` | Lightweight video player (GTK frontend for mpv) |
 | `ffmpegthumbnailer` | Generates video thumbnails in file managers |
 | `ffmpeg` | CLI tool for video/audio conversion and processing |
 | `synaptic` | Graphical package manager — useful for browsing and pinning packages |
-| `transmission-gtk` | Lightweight, clean BitTorrent client |
 | `grml-rescueboot` | Adds a GRML rescue system entry to your GRUB boot menu |
 | `bridge-utils` | Tools for managing network bridges — required for VM networking |
 | `virt-manager` | GUI for managing KVM/QEMU virtual machines (also pulls in libvirt) |
+| `torbrowser-launcher` | Downloads, verifies, and launches the official Tor Browser |
+
+> **Note:** `libreoffice`, `celluloid`, and `transmission-gtk` are pre-installed on Linux Mint and do not need to be reinstalled.
 
 ### Add your user to the KVM group
 
@@ -829,24 +828,6 @@ groups | grep kvm
 </domain>
 ```
 
-### Make Zsh your default shell
-
-After installing `zsh`, switch your user account's default shell from bash:
-
-```bash
-chsh -s $(which zsh)
-```
-
-You will be prompted for your password. **Log out and log back in** for the change to take effect. When you next open a terminal, Zsh will greet you with a first-time setup wizard — follow the prompts to generate a default `~/.zshrc`.
-
-To confirm the change worked:
-
-```bash
-echo $SHELL
-```
-
-Should output `/usr/bin/zsh` or `/bin/zsh`.
-
 ---
 
 ## 10. Brave Browser
@@ -977,7 +958,287 @@ Restart Brave, then visit `brave://policy/` to confirm all policies are loaded a
 
 ---
 
-## 11. Cinnamon Desktop Tweaks
+## 11. Zsh Configuration
+
+### What this does
+
+Zsh (Z Shell) is a more powerful and customisable shell than the default bash. This section covers making it your default shell, setting up a plugin directory structure, installing fast-syntax-highlighting, and applying a personal `.zshrc` configuration with a coloured prompt, sensible history settings, smart tab completion, useful aliases, and rsync backup commands.
+
+### Step 1 — Install Zsh
+
+Zsh should already be installed if you followed Section 9. If not:
+
+```bash
+sudo apt install zsh -y
+```
+
+### Step 2 — Make Zsh your default shell
+
+```bash
+chsh -s $(which zsh)
+```
+
+You will be prompted for your password. **Log out and log back in** for the change to take effect. On first launch, Zsh will offer a setup wizard — you can press `q` to skip it since the `.zshrc` below replaces it entirely.
+
+Confirm after relogging:
+
+```bash
+echo $SHELL
+```
+
+Should output `/usr/bin/zsh` or `/bin/zsh`.
+
+### Step 3 — Create the plugin directory structure
+
+Plugins are kept under `~/.config/zsh/plugins/` so your home directory stays clean. Create the folder:
+
+```bash
+mkdir -p ~/.config/zsh/plugins
+```
+
+### Step 4 — Install fast-syntax-highlighting
+
+[fast-syntax-highlighting](https://github.com/zdharma-continuum/fast-syntax-highlighting) highlights commands as you type them in the terminal — valid commands appear in one colour, invalid ones in another, strings, paths, and flags are all distinguished. It is significantly faster than the older `zsh-syntax-highlighting`.
+
+Clone it directly into the plugin directory:
+
+```bash
+git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git \
+  ~/.config/zsh/plugins/fast-syntax-highlighting
+```
+
+Your plugin directory should now look like this:
+
+```
+~/.config/zsh/
+└── plugins/
+    └── fast-syntax-highlighting/
+```
+
+The `.zshrc` below sources it automatically from this path.
+
+### Step 5 — Create `~/.zshrc`
+
+Place the following file at `~/.zshrc`:
+
+```bash
+nano ~/.zshrc
+```
+
+Paste the full configuration:
+
+```zsh
+##### ZSH CONFIG #####
+autoload -U colors && colors
+PS1="%B%{$fg[red]%}[%{$fg[yellow]%}%n%{$fg[green]%}@%{$fg[blue]%}%M %{$fg[magenta]%}%~%{$fg[red]%}]%{$reset_color%}$%b "
+setopt autocd
+setopt interactive_comments
+stty stop undef
+
+##### History #####
+HISTSIZE=10000000
+SAVEHIST=10000000
+HISTFILE="$HOME/.zsh_history"
+setopt inc_append_history
+setopt share_history
+setopt hist_ignore_dups
+setopt hist_reduce_blanks
+
+##### Completion #####
+autoload -U compinit
+zmodload zsh/complist
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list \
+    'm:{a-zA-Z}={A-Za-z}' \
+    'r:|[._-]=* r:|=*' \
+    'l:|=* r:|=*'
+compinit
+_comp_options+=(globdots)
+
+##### Functions #####
+
+# backup-usb: Backs up home directory to a USB drive mounted under /media/robin/
+# Usage: just run 'backup-usb' and follow the prompt
+#
+# At the prompt you can:
+#   - Press ENTER to use the default: /media/robin/Backup-Linux/Backup/
+#   - Type a custom path relative to /media/robin/, for example:
+#       MyOtherUSB/Backup   -> backs up to /media/robin/MyOtherUSB/Backup/
+#       MyOtherUSB          -> backs up to /media/robin/MyOtherUSB/
+#
+# The function will list available drives before prompting so you can
+# see what is currently mounted under /media/robin/
+#
+# Excludes: .cache, Music, Downloads, .var, Trash, BraveSoftware,
+#           Chromium, torbrowser, flatpak, snap, Desktop
+backup-usb() {
+  echo "Available drives in /media/robin/:"
+  ls /media/robin/
+  echo ""
+  read "drive?Enter USB drive name [Backup-Linux/Backup]: "
+  drive=${drive:-Backup-Linux/Backup}
+  rsync -rltvP --delete --exclude=".cache" --exclude="Music" --exclude="Downloads" --exclude=".var" --exclude=".local/share/Trash" --exclude=".config/BraveSoftware" --exclude=".config/chromium" --exclude=".config/torbrowser" --exclude=".local/share/flatpak" --exclude="snap" --exclude="Desktop" ~/ "/media/robin/$drive/"
+}
+
+##### Aliases #####
+alias \
+	cp="cp -iv" \
+	mv="mv -iv" \
+	rm="rm -vI" \
+	bc="bc -ql" \
+	mkd="mkdir -pv" \
+	yt="yt-dlp --embed-metadata -i" \
+	yta="yt -x -f bestaudio/best" \
+	ytt="yt --skip-download --write-thumbnail" \
+	ffmpeg="ffmpeg -hide_banner"
+
+alias \
+	ls="ls -hN --color=auto --group-directories-first" \
+	grep="grep --color=auto" \
+	diff="diff --color=auto" \
+	ccat="highlight --out-format=ansi" \
+	ip="ip -color=auto"
+
+##### Backup Aliases #####
+# backup:     Backs up home directory to second SSD at /mnt/data/Backup/
+# backup-dry: Dry run of the SSD backup — simulates without copying anything.
+#             Always run this first to verify before a real backup.
+#
+# Both commands use rsync with:
+#   -r  recursive
+#   -l  preserve symlinks as symlinks
+#   -t  preserve timestamps (needed for rsync to detect changes efficiently)
+#   -v  verbose (show files being transferred)
+#   -P  show progress + keep partially transferred files if interrupted
+#   --delete  mirror deletions from source to destination
+#
+# Excludes: .cache, Music, Downloads, .var, Trash, BraveSoftware,
+#           Chromium, torbrowser, flatpak, snap, Desktop
+#
+# Note: owner, group and permissions are intentionally NOT preserved
+# so backups restore cleanly on different machines/users
+alias backup='rsync -rltvP --delete --exclude=".cache" --exclude="Music" --exclude="Downloads" --exclude=".var" --exclude=".local/share/Trash" --exclude=".config/BraveSoftware" --exclude=".config/chromium" --exclude=".config/torbrowser" --exclude=".local/share/flatpak" --exclude="snap" --exclude="Desktop" ~/ /mnt/data/Backup/'
+
+alias backup-dry='rsync -rltvP --delete --dry-run --exclude=".cache" --exclude="Music" --exclude="Downloads" --exclude=".var" --exclude=".local/share/Trash" --exclude=".config/BraveSoftware" --exclude=".config/chromium" --exclude=".config/torbrowser" --exclude=".local/share/flatpak" --exclude="snap" --exclude="Desktop" ~/ /mnt/data/Backup/'
+
+##### Keybindings #####
+# Ctrl + Left/Right to jump words
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word
+bindkey "^[[5C" forward-word
+bindkey "^[[5D" backward-word
+
+##### Syntax Highlighting #####
+source ~/.config/zsh/plugins/fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
+```
+
+### Configuration breakdown
+
+**Prompt (`PS1`)**
+
+The prompt `[user@hostname ~/current/path]$` is drawn entirely in colour using Zsh's `%F{colour}` and `$fg[]` variables. `autoload -U colors && colors` must be called first to enable these. `%B` and `%b` make the whole prompt bold.
+
+| Colour | Part |
+|---|---|
+| Red | Brackets `[` `]` |
+| Yellow | Username (`%n`) |
+| Green | `@` and hostname (`%M`) |
+| Blue | Hostname |
+| Magenta | Current directory (`%~`) |
+
+**Shell options**
+
+| Option | Effect |
+|---|---|
+| `setopt autocd` | Type a directory name to `cd` into it without typing `cd` |
+| `setopt interactive_comments` | Allow `#` comments in interactive shell (useful for documenting commands) |
+| `stty stop undef` | Unbinds `Ctrl+S` which would otherwise freeze the terminal — frees it for other use |
+
+**History**
+
+| Setting | Effect |
+|---|---|
+| `HISTSIZE=10000000` | Keep up to 10 million entries in memory during the session |
+| `SAVEHIST=10000000` | Save up to 10 million entries to disk in `~/.zsh_history` |
+| `inc_append_history` | Write each command to history immediately, not only when the shell exits |
+| `share_history` | Share history across all open terminal sessions in real time |
+| `hist_ignore_dups` | Don't record a command if it's the same as the previous one |
+| `hist_reduce_blanks` | Strip extra whitespace from history entries before saving |
+
+**Completion**
+
+| Setting | Effect |
+|---|---|
+| `zstyle menu select` | Shows a navigable menu when there are multiple completions — use arrow keys to select |
+| `matcher-list` | Makes completion case-insensitive and handles partial matches on word separators |
+| `_comp_options+=(globdots)` | Makes completion show hidden files (dotfiles) without needing to type the `.` first |
+
+**Aliases**
+
+| Alias | Expands to | Effect |
+|---|---|---|
+| `cp` | `cp -iv` | Prompts before overwriting (`-i`), shows what was copied (`-v`) |
+| `mv` | `mv -iv` | Prompts before overwriting, shows what was moved |
+| `rm` | `rm -vI` | Shows what is deleted; prompts once when removing 3+ files (safer than `-i` per file) |
+| `bc` | `bc -ql` | Opens the calculator in quiet mode (`-q`) without the copyright banner |
+| `mkd` | `mkdir -pv` | Creates nested directories and shows each one created |
+| `yt` | `yt-dlp --embed-metadata -i` | Downloads video with metadata embedded; `-i` ignores errors and continues |
+| `yta` | `yt -x -f bestaudio/best` | Downloads audio only in the best available format |
+| `ytt` | `yt --skip-download --write-thumbnail` | Downloads only the thumbnail image without downloading the video |
+| `ffmpeg` | `ffmpeg -hide_banner` | Suppresses the long version/copyright header that ffmpeg prints by default |
+| `ls` | `ls -hN --color=auto --group-directories-first` | Human-readable sizes, literal special characters, colour output, directories listed first |
+| `grep` | `grep --color=auto` | Highlights matches in colour |
+| `diff` | `diff --color=auto` | Colours additions and deletions |
+| `ccat` | `highlight --out-format=ansi` | Syntax-highlighted cat — requires the `highlight` package |
+| `ip` | `ip -color=auto` | Coloured output for the `ip` command |
+
+**Backup function — `backup-usb`**
+
+An interactive function for backing up the home directory to a USB drive. It lists all mounted drives under `/media/robin/` first so you can see what is available, then prompts for the destination path. Pressing Enter uses `Backup-Linux/Backup` as the default. The actual copy is done with rsync using the same flags as the `backup` alias below.
+
+**Backup aliases — `backup` and `backup-dry`**
+
+Two rsync aliases for backing up the home directory to a second internal SSD mounted at `/mnt/data/Backup/`.
+
+`backup-dry` performs a dry run — it shows exactly what *would* be copied or deleted without touching anything. Always run this first to verify the operation before running `backup` for real.
+
+**rsync flags used:**
+
+| Flag | Effect |
+|---|---|
+| `-r` | Recursive — copy all subdirectories |
+| `-l` | Preserve symlinks as symlinks rather than following them |
+| `-t` | Preserve timestamps — allows rsync to detect unchanged files efficiently on subsequent runs |
+| `-v` | Verbose — print each file as it is transferred |
+| `-P` | Show transfer progress and keep partially transferred files if interrupted |
+| `--delete` | Mirror deletions — removes files from the destination that no longer exist in the source |
+| `--dry-run` | Simulate the operation without making any changes (backup-dry only) |
+
+Files and directories excluded from both backups: `.cache`, `Music`, `Downloads`, `.var`, `Trash`, `BraveSoftware`, `chromium`, `torbrowser`, `flatpak`, `snap`, `Desktop`.
+
+> Owner, group, and permissions are intentionally not preserved (no `-a` / `--archive` flag). This means backups restore cleanly even on a different machine or under a different username.
+
+**Keybindings**
+
+Binds `Ctrl + Left` and `Ctrl + Right` to jump backward and forward by word. The two entries per direction handle different terminal emulators that send different escape codes for the same key combination.
+
+**Syntax highlighting**
+
+Sources `fast-syntax-highlighting` from the plugin path set up in Step 3. This must be the **last line** in `.zshrc` — sourcing it earlier can interfere with completion and other settings.
+
+### Verify everything works
+
+Reload your config without restarting:
+
+```bash
+source ~/.zshrc
+```
+
+Check syntax highlighting is active by typing a command — valid commands should appear in green, invalid ones in red. Check word-jump with `Ctrl + Left/Right`. Run `backup-dry` to confirm the rsync dry run works.
+
+---
+
+## 12. Cinnamon Desktop Tweaks
 
 > **Skip this section if you are not using the Cinnamon desktop** (e.g. Linux Mint).
 
@@ -1044,7 +1305,7 @@ Right-click the clock in the taskbar → **Configure**
 
 ---
 
-## 12. Unified Qt & GTK Theming
+## 13. Unified Qt & GTK Theming
 
 ### What this does
 
@@ -1122,13 +1383,13 @@ The `/etc/environment` variables are only picked up at login. After logging back
 
 ---
 
-## 13. Font Configuration
+## 14. Font Configuration
 
 Good font configuration on Linux Mint covers three things: rendering quality (how fonts are drawn on screen), metric-compatible substitutions (so documents and web pages that request Windows fonts render with correct spacing), and choosing readable system fonts for the desktop UI.
 
 Linux Mint Cinnamon ships with sensible rendering defaults, but the substitution rules and font choices below improve on them meaningfully.
 
-### 13.1 Install fonts
+### 14.1 Install fonts
 
 Most of the fonts below are available directly from the Ubuntu repositories. A few must be downloaded manually as noted.
 
@@ -1175,7 +1436,7 @@ fc-match "Comic Neue"
 fc-match "Selawik"
 ```
 
-### 13.2 fontconfig — `~/.config/fontconfig/fonts.conf`
+### 14.2 fontconfig — `~/.config/fontconfig/fonts.conf`
 
 This file controls rendering quality and sets up metric-compatible substitutions so that documents and web pages requesting Windows fonts get correctly-sized free alternatives instead of random fallbacks.
 
@@ -1459,7 +1720,7 @@ for family in \
 done
 ```
 
-### 13.3 Cinnamon desktop font settings
+### 14.3 Cinnamon desktop font settings
 
 Open **System Settings → Fonts** and set the following:
 
@@ -1474,7 +1735,7 @@ Open **System Settings → Fonts** and set the following:
 | Antialiasing | Rgba | — |
 | RGBA order | RGB | — |
 
-### 13.4 LibreOffice font settings
+### 14.4 LibreOffice font settings
 
 Open **Tools → Options → LibreOffice Writer → Basic Fonts (Western)** and set:
 
@@ -1488,7 +1749,7 @@ Open **Tools → Options → LibreOffice Writer → Basic Fonts (Western)** and 
 
 ---
 
-## 14. Applying Everything & Verifying
+## 15. Applying Everything & Verifying
 
 Here is a single block you can run after creating all the files above:
 
@@ -1516,6 +1777,12 @@ sysctl kernel.kptr_restrict kernel.dmesg_restrict net.ipv4.tcp_syncookies vm.mma
 
 # Verify disabled services
 systemctl is-enabled cups.service cups-browsed.service bluetooth.service
+
+# Verify Zsh is default shell
+echo $SHELL
+
+# Verify fast-syntax-highlighting is loaded
+echo $ZSH_HIGHLIGHT_VERSION 2>/dev/null || echo "Check: source ~/.zshrc and type a command"
 
 # Verify Qt theming env vars are active (after relogin)
 echo $QT_QPA_PLATFORMTHEME
@@ -1547,7 +1814,7 @@ All settings (except the active MAC address) will also **persist across reboots*
 
 ---
 
-## 15. Quick Reference Cheatsheet
+## 16. Quick Reference Cheatsheet
 
 | File to create/edit | Location | Command to apply |
 |---|---|---|
@@ -1568,6 +1835,9 @@ All settings (except the active MAC address) will also **persist across reboots*
 | Install Brave | — (CLI only) | See Section 10 |
 | Brave policies | `/etc/brave/policies/managed/policies.json` | Restart Brave, verify at `brave://policy/` |
 | Set default shell to Zsh | — (CLI only) | `chsh -s $(which zsh)` |
+| Zsh plugin directory | `~/.config/zsh/plugins/` | `mkdir -p ~/.config/zsh/plugins` |
+| fast-syntax-highlighting | `~/.config/zsh/plugins/fast-syntax-highlighting/` | `git clone ...` (see Section 11) |
+| `.zshrc` | `~/.zshrc` | `source ~/.zshrc` |
 | Qt theming env vars | `/etc/environment` | Log out and back in |
 | GTK3 settings | `~/.config/gtk-3.0/settings.ini` | Immediate (per-app relaunch) |
 | GTK2 theme name | `~/.gtkrc-2.0` | Immediate (per-app relaunch) |
