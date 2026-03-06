@@ -30,7 +30,8 @@ Everything to do right after a fresh Ubuntu, Linux Mint, or Ubuntu-based install
 - Random MAC address at every boot via NetworkManager
 - UFW firewall setup (including QEMU/Virt-Manager support)
 - Disable unnecessary services (CUPS, Bluetooth)
-- Recommended software (Brave, KeePassXC, Zsh, Virt-Manager, and more)
+- Recommended software (KeePassXC, Zsh, Virt-Manager, and more)
+- **Brave Browser** — install from the official apt repo + managed policy file to disable AI, telemetry, crypto/rewards bloat, and other extras; configurable DoH provider (Cloudflare, Quad9, AdGuard, or OS default)
 - Cinnamon desktop tweaks (Linux Mint)
 - Font configuration — rendering quality, metric-compatible MS font substitutions, and recommended system fonts (Inter, JetBrains Mono, Linux Libertine)
 - LibreOffice font setup for maximum MS Office document compatibility
