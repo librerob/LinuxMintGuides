@@ -11,20 +11,20 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 1. [Kernel & System Tuning (`99-hardening.conf`)](#1-kernel--system-tuning)
 2. [GRUB Boot Parameters](#1a-grub-boot-parameters)
 3. [Tune Swappiness (`99-swappiness.conf`)](#2-tune-swappiness)
-3. [Cloudflare DNS over TLS (`resolved.conf`)](#3-cloudflare-dns-over-tls)
-4. [Random MAC Address at Every Boot (`NetworkManager.conf`)](#4-random-mac-address-at-every-boot)
-5. [UFW Firewall](#5-ufw-firewall)
-6. [UFW + QEMU/Virt-Manager (Optional)](#6-ufw--qemuvirt-manager-optional)
-7. [Disable Unnecessary Services](#7-disable-unnecessary-services)
-8. [Remove Unwanted Packages](#8-remove-unwanted-packages)
-9. [Software to Install](#9-software-to-install)
-10. [Brave Browser](#10-brave-browser)
-11. [Zsh Configuration](#11-zsh-configuration)
-12. [Cinnamon Desktop Tweaks](#12-cinnamon-desktop-tweaks)
-13. [Unified Qt & GTK Theming](#13-unified-qt--gtk-theming)
-14. [Font Configuration](#14-font-configuration)
-15. [Applying Everything & Verifying](#15-applying-everything--verifying)
-16. [Quick Reference Cheatsheet](#16-quick-reference-cheatsheet)
+4. [Cloudflare DNS over TLS (`resolved.conf`)](#3-cloudflare-dns-over-tls)
+5. [Random MAC Address at Every Boot (`NetworkManager.conf`)](#4-random-mac-address-at-every-boot)
+6. [UFW Firewall](#5-ufw-firewall)
+7. [UFW + QEMU/Virt-Manager (Optional)](#6-ufw--qemuvirt-manager-optional)
+8. [Disable Unnecessary Services](#7-disable-unnecessary-services)
+9. [Remove Unwanted Packages](#8-remove-unwanted-packages)
+10. [Software to Install](#9-software-to-install)
+11. [Brave Browser](#10-brave-browser)
+12. [Zsh Configuration](#11-zsh-configuration)
+13. [Cinnamon Desktop Tweaks](#12-cinnamon-desktop-tweaks)
+14. [Unified Qt & GTK Theming](#13-unified-qt--gtk-theming)
+15. [Font Configuration](#14-font-configuration)
+16. [Applying Everything & Verifying](#15-applying-everything--verifying)
+17. [Quick Reference Cheatsheet](#16-quick-reference-cheatsheet)
 
 ---
 
@@ -32,7 +32,21 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 
 ### What this does
 
-This file tunes kernel parameters at boot via `sysctl`. It restricts information leaks, hardens the kernel against common exploit techniques, enables network attack mitigations, and hardens the filesystem. Linux Mint already sets some of these via its own files in `/etc/sysctl.d/` — using the `99-` prefix ensures your settings load last and override any weaker defaults.
+This file tunes kernel parameters at boot via `sysctl`. It restricts information leaks, hardens the kernel against common exploit techniques, enables network attack mitigations, and hardens the filesystem.
+
+Linux Mint already ships several sysctl files in `/etc/sysctl.d/` with some baseline settings. Our `99-` prefixed file loads last (files are applied in alphabetical order) and overrides any weaker defaults. Here is what Mint sets out of the box and what we change:
+
+| Parameter | Mint default | Our value | What changes |
+|---|---|---|---|
+| `kernel.kptr_restrict` | `1` | `2` | Hides kernel pointers from *all* users, not just unprivileged ones |
+| `kernel.printk` | `4 4 1 7` | `3 3 3 3` | Stricter suppression of kernel messages on the boot console |
+| `kernel.sysrq` | `176` | `4` | Locks SysRq down to secure attention key only — Mint's default allows many functions |
+| `kernel.yama.ptrace_scope` | `1` | `2` | Restricts ptrace to `CAP_SYS_PTRACE` — Mint only restricts to parent processes |
+| `net.ipv4.conf.all.rp_filter` | `2` | `1` | Loosened slightly for VM/VPN compatibility — see note below |
+
+Everything else in this file — BPF restrictions, kexec, userfaultfd, ICMP redirects, source routing, TCP SACK, protected fifos/regular, ASLR bits — is not set by Mint at all and is genuinely new.
+
+> **Note on `rp_filter`:** Mint ships `rp_filter=2` (strict mode), which is technically stronger, but it can break asymmetric routing used by KVM virtual machines and VPNs. We set `1` (loose mode) which still blocks IP spoofing and is the right choice if you use Virt-Manager or a VPN. If you don't use either, you can safely set it to `2`.
 
 ### Where to put it
 
@@ -95,6 +109,8 @@ net.ipv4.tcp_syncookies = 1
 net.ipv4.tcp_rfc1337 = 1
 
 # Enable reverse path filtering — blocks IP spoofing
+# Using loose mode (1) instead of Mint's strict mode (2) for VM/VPN compatibility
+# Change to 2 if you don't use KVM/Virt-Manager or a VPN
 net.ipv4.conf.all.rp_filter = 1
 net.ipv4.conf.default.rp_filter = 1
 
@@ -180,7 +196,7 @@ Save and close (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
 |---|---|---|
 | `net.ipv4.tcp_syncookies` | `1` | Protects against SYN flood DoS attacks |
 | `net.ipv4.tcp_rfc1337` | `1` | Protects against TIME_WAIT assassination attacks |
-| `net.ipv4.conf.all.rp_filter` | `1` | Enables reverse path filtering — blocks IP spoofing |
+| `net.ipv4.conf.all.rp_filter` | `1` | Reverse path filtering — blocks IP spoofing. Set to loose mode (`1`) instead of Mint's strict (`2`) for VM/VPN compatibility |
 | `net.ipv4.conf.default.rp_filter` | `1` | Same as above, applied to new interfaces |
 | `accept_redirects` (IPv4 + IPv6) | `0` | Disables ICMP redirect acceptance — prevents man-in-the-middle attacks |
 | `send_redirects` | `0` | Stops the machine from sending ICMP redirects (it is not a router) |
