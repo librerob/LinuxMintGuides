@@ -12,19 +12,20 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 2. [GRUB Boot Parameters](#1a-grub-boot-parameters)
 3. [Tune Swappiness (`99-swappiness.conf`)](#2-tune-swappiness)
 4. [Cloudflare DNS over TLS (`resolved.conf`)](#3-cloudflare-dns-over-tls)
-5. [Random MAC Address at Every Boot (`NetworkManager.conf`)](#4-random-mac-address-at-every-boot)
-6. [UFW Firewall](#5-ufw-firewall)
-7. [UFW + QEMU/Virt-Manager (Optional)](#6-ufw--qemuvirt-manager-optional)
-8. [Disable Unnecessary Services](#7-disable-unnecessary-services)
-9. [Remove Unwanted Packages](#8-remove-unwanted-packages)
-10. [Software to Install](#9-software-to-install)
-11. [Brave Browser](#10-brave-browser)
-12. [Zsh Configuration](#11-zsh-configuration)
-13. [Cinnamon Desktop Tweaks](#12-cinnamon-desktop-tweaks)
-14. [Unified Qt & GTK Theming](#13-unified-qt--gtk-theming)
-15. [Font Configuration](#14-font-configuration)
-16. [Applying Everything & Verifying](#15-applying-everything--verifying)
-17. [Quick Reference Cheatsheet](#16-quick-reference-cheatsheet)
+5. [Hosts File Ad & Malware Blocking](#4-hosts-file-ad--malware-blocking)
+6. [Random MAC Address at Every Boot (`NetworkManager.conf`)](#5-random-mac-address-at-every-boot)
+7. [UFW Firewall](#6-ufw-firewall)
+8. [UFW + QEMU/Virt-Manager (Optional)](#7-ufw--qemuvirt-manager-optional)
+9. [Disable Unnecessary Services](#8-disable-unnecessary-services)
+10. [Remove Unwanted Packages](#9-remove-unwanted-packages)
+11. [Software to Install](#10-software-to-install)
+12. [Brave Browser](#11-brave-browser)
+13. [Zsh Configuration](#12-zsh-configuration)
+14. [Cinnamon Desktop Tweaks](#13-cinnamon-desktop-tweaks)
+15. [Unified Qt & GTK Theming](#14-unified-qt--gtk-theming)
+16. [Font Configuration](#15-font-configuration)
+17. [Applying Everything & Verifying](#16-applying-everything--verifying)
+18. [Quick Reference Cheatsheet](#17-quick-reference-cheatsheet)
 
 ---
 
@@ -453,7 +454,129 @@ resolvectl query cloudflare.com
 
 ---
 
-## 4. Random MAC Address at Every Boot
+## 4. Hosts File Ad & Malware Blocking
+
+### What this does
+
+The `/etc/hosts` file maps hostnames to IP addresses before any DNS query is made. By redirecting known ad and malware domains to `0.0.0.0`, every app and process on the system — browsers, terminals, background services — is blocked from reaching those domains at the OS level, with no browser extension or proxy required.
+
+This section uses [StevenBlack's hosts](https://github.com/StevenBlack/hosts) — a well-maintained, widely used merged blocklist covering adware and malware domains (~76k entries). A systemd timer keeps it updated weekly automatically.
+
+> **Note:** Hosts file blocking works at the system level and is completely independent of your browser. It complements browser-level blocking (uBlock Origin etc.) rather than replacing it.
+
+### Step 1 — Back up the original hosts file
+
+```bash
+sudo cp /etc/hosts /etc/hosts.bak
+```
+
+To restore the original at any time:
+
+```bash
+sudo cp /etc/hosts.bak /etc/hosts
+```
+
+### Step 2 — Download and install the blocklist
+
+```bash
+sudo curl -fsSL https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts -o /etc/hosts
+```
+
+This replaces `/etc/hosts` entirely. The downloaded file includes the standard localhost entries (`127.0.0.1 localhost`, `::1 localhost` etc.) at the top, so nothing is lost.
+
+### Step 3 — Verify it worked
+
+```bash
+# Check the file starts with the expected localhost entries
+head -10 /etc/hosts
+
+# Check the total number of blocked entries
+grep -c "^0.0.0.0" /etc/hosts
+```
+
+You should see ~76,000+ blocked entries. Test that a known ad domain is blocked:
+
+```bash
+ping -c 1 doubleclick.net
+```
+
+It should resolve to `0.0.0.0` and fail immediately rather than reaching a real server.
+
+### Step 4 — Create the update service
+
+Create a systemd service that downloads the latest blocklist:
+
+```bash
+sudo nano /etc/systemd/system/hosts-update.service
+```
+
+```ini
+[Unit]
+Description=Update StevenBlack hosts blocklist
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -fsSL https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts -o /etc/hosts
+```
+
+### Step 5 — Create the timer
+
+```bash
+sudo nano /etc/systemd/system/hosts-update.timer
+```
+
+```ini
+[Unit]
+Description=Weekly update of StevenBlack hosts blocklist
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+`Persistent=true` means if the system was off at the scheduled time (e.g. the machine was shut down on the weekend), the update will run on the next boot instead of being skipped entirely.
+
+### Step 6 — Enable and start the timer
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now hosts-update.timer
+```
+
+### Verify the timer is active
+
+```bash
+systemctl status hosts-update.timer
+```
+
+You should see `Active: active (waiting)` and the next trigger time listed. To see all active timers:
+
+```bash
+systemctl list-timers hosts-update.timer
+```
+
+### Run an update manually at any time
+
+```bash
+sudo systemctl start hosts-update.service
+```
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Legitimate site is blocked | Add `0.0.0.0 example.com` temporarily or find and report the false positive to the StevenBlack repo |
+| `ping doubleclick.net` still resolves | Run `sudo systemctl restart systemd-resolved` to flush the DNS cache |
+| Timer not firing | Check `journalctl -u hosts-update.service` for errors |
+
+---
+
+## 5. Random MAC Address at Every Boot
 
 ### What this does
 
@@ -2243,8 +2366,11 @@ sysctl kernel.kptr_restrict kernel.dmesg_restrict net.ipv4.tcp_syncookies vm.mma
 # Verify disabled services
 systemctl is-enabled cups.service cups-browsed.service bluetooth.service
 
-# Verify Zsh is default shell
-echo $SHELL
+# Verify hosts blocklist is active
+grep -c "^0.0.0.0" /etc/hosts
+
+# Verify hosts update timer is running
+systemctl list-timers hosts-update.timer
 
 # Verify fast-syntax-highlighting is loaded
 echo $ZSH_HIGHLIGHT_VERSION 2>/dev/null || echo "Check: source ~/.zshrc and type a command"
@@ -2283,7 +2409,9 @@ All settings (except the active MAC address) will also **persist across reboots*
 
 | File to create/edit | Location | Command to apply |
 |---|---|---|
-| `99-hardening.conf` | `/etc/sysctl.d/99-hardening.conf` | `sudo sysctl --system` |
+| Hosts blocklist (initial install) | `/etc/hosts` | `sudo curl -fsSL https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts -o /etc/hosts` |
+| `hosts-update.service` | `/etc/systemd/system/hosts-update.service` | `sudo systemctl start hosts-update.service` |
+| `hosts-update.timer` | `/etc/systemd/system/hosts-update.timer` | `sudo systemctl enable --now hosts-update.timer` |
 | GRUB boot parameters | `/etc/default/grub` | `sudo update-grub` then reboot |
 | `99-swappiness.conf` | `/etc/sysctl.d/99-swappiness.conf` | `sudo sysctl --system` |
 | `resolved.conf` | `/etc/systemd/resolved.conf` | `sudo systemctl restart systemd-resolved` |
