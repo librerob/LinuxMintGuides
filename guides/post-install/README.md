@@ -9,7 +9,8 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 ## Table of Contents
 
 1. [Kernel & System Tuning (`99-hardening.conf`)](#1-kernel--system-tuning)
-2. [Tune Swappiness (`99-swappiness.conf`)](#2-tune-swappiness)
+2. [GRUB Boot Parameters](#1a-grub-boot-parameters)
+3. [Tune Swappiness (`99-swappiness.conf`)](#2-tune-swappiness)
 3. [Cloudflare DNS over TLS (`resolved.conf`)](#3-cloudflare-dns-over-tls)
 4. [Random MAC Address at Every Boot (`NetworkManager.conf`)](#4-random-mac-address-at-every-boot)
 5. [UFW Firewall](#5-ufw-firewall)
@@ -31,22 +32,7 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 
 ### What this does
 
-This file tunes kernel parameters at boot via `sysctl`. It restricts information leaks, enables network attack mitigations, and hardens the filesystem.
-
-**Parameter breakdown:**
-
-| Parameter | Value | Effect |
-|---|---|---|
-| `kernel.kptr_restrict` | `2` | Hides kernel pointer addresses from all users (prevents info leaks) |
-| `kernel.dmesg_restrict` | `1` | Restricts `dmesg` output to root only |
-| `net.ipv4.tcp_syncookies` | `1` | Protects against SYN flood DoS attacks |
-| `net.ipv4.tcp_rfc1337` | `1` | Protects against TIME_WAIT assassination attacks |
-| `net.ipv4.conf.all.rp_filter` | `1` | Enables reverse path filtering (blocks IP spoofing) |
-| `net.ipv4.conf.default.rp_filter` | `1` | Same as above, applied to new interfaces |
-| `fs.protected_symlinks` | `1` | Prevents symlink-based privilege escalation attacks |
-| `fs.protected_hardlinks` | `1` | Prevents hardlink-based privilege escalation attacks |
-| `vm.mmap_rnd_bits` | `32` | Maximises ASLR entropy for 64-bit processes |
-| `vm.mmap_rnd_compat_bits` | `16` | Maximises ASLR entropy for 32-bit (compat) processes |
+This file tunes kernel parameters at boot via `sysctl`. It restricts information leaks, hardens the kernel against common exploit techniques, enables network attack mitigations, and hardens the filesystem. Linux Mint already sets some of these via its own files in `/etc/sysctl.d/` — using the `99-` prefix ensures your settings load last and override any weaker defaults.
 
 ### Where to put it
 
@@ -67,26 +53,157 @@ sudo nano /etc/sysctl.d/99-hardening.conf
 Paste the following content:
 
 ```ini
-# kernel pointer/info leak hardening
+# ============================================================
+# Kernel self-protection
+# ============================================================
+
+# Hide kernel pointer addresses from all users (prevents info leaks)
 kernel.kptr_restrict = 2
+
+# Restrict dmesg output to root only
 kernel.dmesg_restrict = 1
 
-# network protections
+# Suppress kernel log messages on console during boot
+kernel.printk = 3 3 3 3
+
+# Restrict eBPF to CAP_BPF — large kernel attack surface
+kernel.unprivileged_bpf_disabled = 1
+
+# Harden the eBPF JIT compiler (constant blinding etc.)
+net.core.bpf_jit_harden = 2
+
+# Disable loading another kernel at runtime (kexec)
+kernel.kexec_load_disabled = 1
+
+# Restrict SysRq to secure attention key only
+kernel.sysrq = 4
+
+# Restrict userfaultfd() to CAP_SYS_PTRACE — commonly abused in kernel exploits
+vm.unprivileged_userfaultfd = 0
+
+# Restrict TTY line discipline loading to CAP_SYS_MODULE
+dev.tty.ldisc_autoload = 0
+
+# ============================================================
+# Network protections
+# ============================================================
+
+# Protect against SYN flood DoS attacks
 net.ipv4.tcp_syncookies = 1
+
+# Protect against TIME_WAIT assassination attacks
 net.ipv4.tcp_rfc1337 = 1
+
+# Enable reverse path filtering — blocks IP spoofing
 net.ipv4.conf.all.rp_filter = 1
 net.ipv4.conf.default.rp_filter = 1
 
-# file system protections
+# Disable ICMP redirect acceptance — prevents man-in-the-middle attacks
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# Disable sending ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# Disable source routing — prevents traffic redirection attacks
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv6.conf.all.accept_source_route = 0
+net.ipv6.conf.default.accept_source_route = 0
+
+# Disable IPv6 router advertisement acceptance — prevents MitM via rogue RA
+net.ipv6.conf.all.accept_ra = 0
+net.ipv6.conf.default.accept_ra = 0
+
+# Disable TCP SACK — commonly exploited and unnecessary on most desktops
+net.ipv4.tcp_sack = 0
+net.ipv4.tcp_dsack = 0
+net.ipv4.tcp_fack = 0
+
+# ============================================================
+# Userspace protections
+# ============================================================
+
+# Restrict ptrace to CAP_SYS_PTRACE — prevents memory inspection of
+# other running processes.
+# Note: breaks gdb and other debuggers for non-root users.
+# Set to 3 to disable ptrace entirely.
+kernel.yama.ptrace_scope = 2
+
+# Maximise ASLR entropy for 64-bit processes
+vm.mmap_rnd_bits = 32
+
+# Maximise ASLR entropy for 32-bit (compat) processes
+vm.mmap_rnd_compat_bits = 16
+
+# ============================================================
+# Filesystem protections
+# ============================================================
+
+# Prevent symlink-based privilege escalation attacks
 fs.protected_symlinks = 1
+
+# Prevent hardlink-based privilege escalation attacks
 fs.protected_hardlinks = 1
 
-# ASLR randomness
-vm.mmap_rnd_bits = 32
-vm.mmap_rnd_compat_bits = 16
+# Prevent creating files in attacker-controlled world-writable directories
+fs.protected_fifos = 2
+fs.protected_regular = 2
 ```
 
 Save and close (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
+
+### Parameter breakdown
+
+**Kernel self-protection**
+
+| Parameter | Value | Effect |
+|---|---|---|
+| `kernel.kptr_restrict` | `2` | Hides kernel pointer addresses from all users — prevents info leaks useful for exploits |
+| `kernel.dmesg_restrict` | `1` | Restricts `dmesg` (kernel log) to root only — limits info available to attackers |
+| `kernel.printk` | `3 3 3 3` | Suppresses kernel messages on the console during boot — prevents screen-visible info leaks |
+| `kernel.unprivileged_bpf_disabled` | `1` | Restricts eBPF to privileged processes — eBPF is a large kernel attack surface |
+| `net.core.bpf_jit_harden` | `2` | Hardens the eBPF JIT compiler against attacks (constant blinding). Read-only after boot — verified with sudo |
+| `kernel.kexec_load_disabled` | `1` | Prevents loading a new kernel at runtime — blocks a method of gaining arbitrary kernel code execution |
+| `kernel.sysrq` | `4` | Restricts SysRq to the secure attention key only — prevents remote/physical SysRq abuse |
+| `vm.unprivileged_userfaultfd` | `0` | Restricts `userfaultfd()` syscall — frequently abused in use-after-free kernel exploits |
+| `dev.tty.ldisc_autoload` | `0` | Prevents unprivileged loading of TTY line disciplines — abused in past privilege escalation exploits |
+
+**Network**
+
+| Parameter | Value | Effect |
+|---|---|---|
+| `net.ipv4.tcp_syncookies` | `1` | Protects against SYN flood DoS attacks |
+| `net.ipv4.tcp_rfc1337` | `1` | Protects against TIME_WAIT assassination attacks |
+| `net.ipv4.conf.all.rp_filter` | `1` | Enables reverse path filtering — blocks IP spoofing |
+| `net.ipv4.conf.default.rp_filter` | `1` | Same as above, applied to new interfaces |
+| `accept_redirects` (IPv4 + IPv6) | `0` | Disables ICMP redirect acceptance — prevents man-in-the-middle attacks |
+| `send_redirects` | `0` | Stops the machine from sending ICMP redirects (it is not a router) |
+| `accept_source_route` (IPv4 + IPv6) | `0` | Disables source routing — prevents traffic redirection attacks |
+| `net.ipv6.conf.all.accept_ra` | `0` | Ignores IPv6 router advertisements — malicious RAs can cause MitM attacks |
+| `net.ipv4.tcp_sack` / `tcp_dsack` / `tcp_fack` | `0` | Disables TCP selective acknowledgement — commonly exploited, rarely needed on desktops |
+
+**Userspace**
+
+| Parameter | Value | Effect |
+|---|---|---|
+| `kernel.yama.ptrace_scope` | `2` | Restricts ptrace to `CAP_SYS_PTRACE` — prevents processes from inspecting each other's memory. Note: breaks `gdb` for non-root users |
+| `vm.mmap_rnd_bits` | `32` | Maximises ASLR entropy for 64-bit processes. Read-only after boot — verified with sudo |
+| `vm.mmap_rnd_compat_bits` | `16` | Maximises ASLR entropy for 32-bit (compat) processes. Read-only after boot — verified with sudo |
+
+**Filesystem**
+
+| Parameter | Value | Effect |
+|---|---|---|
+| `fs.protected_symlinks` | `1` | Prevents symlink-based privilege escalation |
+| `fs.protected_hardlinks` | `1` | Prevents hardlink-based privilege escalation |
+| `fs.protected_fifos` | `2` | Prevents creating FIFOs in world-writable directories — hardens against data spoofing. Some kernels silently cap this at `1`; setting `2` is harmless and future-proof |
+| `fs.protected_regular` | `2` | Same protection for regular files in world-writable directories |
 
 ### Apply without rebooting
 
@@ -94,17 +211,93 @@ Save and close (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
 sudo sysctl --system
 ```
 
-This reloads all files in `/etc/sysctl.d/` and `/etc/sysctl.conf`. You should see each parameter echoed as it is applied.
+This reloads all files in `/etc/sysctl.d/` and `/etc/sysctl.conf`. You will see each parameter echoed as it is applied. Some values (`net.core.bpf_jit_harden`, `vm.mmap_rnd_bits`, `vm.mmap_rnd_compat_bits`) are write-only and will show "permission denied" when read as a normal user — this is expected behaviour, not an error.
 
 ### Verify
 
 ```bash
-sysctl kernel.kptr_restrict
-sysctl net.ipv4.tcp_syncookies
-sysctl vm.mmap_rnd_bits
+sudo sysctl \
+  kernel.kptr_restrict \
+  kernel.dmesg_restrict \
+  kernel.unprivileged_bpf_disabled \
+  net.core.bpf_jit_harden \
+  kernel.kexec_load_disabled \
+  kernel.yama.ptrace_scope \
+  vm.mmap_rnd_bits \
+  vm.mmap_rnd_compat_bits \
+  fs.protected_fifos \
+  net.ipv4.tcp_sack \
+  net.ipv6.conf.all.accept_ra
 ```
 
-Each should return the value you set.
+All should return the values set above.
+
+---
+
+## 1a. GRUB Boot Parameters
+
+### What this does
+
+Some kernel hardening options can only be set at boot time via kernel command-line parameters passed through GRUB — they cannot be changed via sysctl once the system is running. This section adds a small set of safe, well-tested parameters that complement the sysctl hardening above.
+
+### Edit the GRUB config
+
+```bash
+sudo nano /etc/default/grub
+```
+
+Find the `GRUB_CMDLINE_LINUX_DEFAULT` line. It will look something like:
+
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+```
+
+Append the new parameters after your existing ones:
+
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash slab_nomerge init_on_alloc=1 init_on_free=1 page_alloc.shuffle=1 pti=on vsyscall=none"
+```
+
+Save and close, then regenerate the GRUB config:
+
+```bash
+sudo update-grub
+```
+
+Reboot to apply:
+
+```bash
+sudo reboot
+```
+
+### Parameter breakdown
+
+| Parameter | Effect |
+|---|---|
+| `slab_nomerge` | Disables merging of kernel slab caches — makes heap exploitation significantly harder by preventing cache layout manipulation |
+| `init_on_alloc=1 init_on_free=1` | Zeroes memory on allocation and free — mitigates use-after-free vulnerabilities and clears sensitive data from memory. Small performance cost (~1–3%) on heavy I/O workloads |
+| `page_alloc.shuffle=1` | Randomises page allocator freelists — hardens against heap attacks and slightly *improves* performance due to better cache behaviour |
+| `pti=on` | Enforces Kernel Page Table Isolation — mitigates Meltdown and prevents some KASLR bypasses. Already on by default on most kernels; this makes it explicit |
+| `vsyscall=none` | Disables vsyscalls (obsolete, replaced by vDSO) — vsyscalls sit at fixed memory addresses making them useful for ROP attacks. Safe on all modern software |
+
+### Verify
+
+After rebooting, confirm all parameters are active:
+
+```bash
+cat /proc/cmdline
+```
+
+You should see all five parameters in the output alongside your existing ones.
+
+### Reverting if something goes wrong
+
+If the system misbehaves after a reboot, you can edit the boot entry temporarily at the GRUB menu without touching any files:
+
+1. At the GRUB menu, press `e` to edit the current boot entry
+2. Find the `linux` line and remove the added parameters
+3. Press `Ctrl+X` to boot with the edited entry (one time only — nothing is saved)
+4. Once booted, edit `/etc/default/grub` to remove the parameters permanently and run `sudo update-grub`
 
 ---
 
@@ -875,7 +1068,7 @@ Create `/etc/brave/policies/managed/policies.json` with the following content:
   "BraveSpeedreaderEnabled": false,
   "BraveWaybackMachineEnabled": false,
   "BravePlaylistEnabled": false,
-  "SyncDisabled": true,
+  "SyncDisabled": false,
   "PasswordManagerEnabled": false,
   "AutofillAddressEnabled": false,
   "AutofillCreditCardEnabled": false,
@@ -891,7 +1084,7 @@ Create `/etc/brave/policies/managed/policies.json` with the following content:
 | `BraveRewardsDisabled / WalletDisabled / VPNDisabled / TorDisabled: true` | Turns off Brave's crypto and monetisation suite |
 | `BraveP3AEnabled / BraveStatsPingEnabled / BraveWebDiscoveryEnabled: false` | Disables all telemetry and usage reporting |
 | `BraveNewsDisabled / BraveTalkDisabled / BraveSpeedreaderEnabled / BraveWaybackMachineEnabled / BravePlaylistEnabled` | Removes sidebar clutter features |
-| `SyncDisabled: false` | Leaves Sync **disabled** — enable manually if you want it |
+| `SyncDisabled: false` | Leaves Sync **enabled** — disable manually if you don't want it |
 | `PasswordManagerEnabled / AutofillAddressEnabled / AutofillCreditCardEnabled: false` | Disables the built-in password manager and autofill (use KeePassXC instead) |
 | `DnsOverHttpsMode: automatic` | Uses secure DNS when available, falls back to your system/OS DNS resolver — no hardcoded provider |
 
@@ -1341,7 +1534,7 @@ nano ~/.config/gtk-3.0/settings.ini
 [Settings]
 gtk-font-name=Inter Medium 11
 gtk-cursor-theme-name=DMZ-Black
-gtk-icon-theme-name=Papirus-Dark
+gtk-icon-theme-name=Mint-Y-Sand
 gtk-theme-name=Flat-Remix-GTK-Blue-Darkest-Solid-Cinnamon-Patch
 ```
 
@@ -1757,6 +1950,23 @@ Here is a single block you can run after creating all the files above:
 # Apply sysctl settings (tuning + swappiness)
 sudo sysctl --system
 
+# Verify key hardening values (some require sudo to read)
+sudo sysctl \
+  kernel.kptr_restrict \
+  kernel.dmesg_restrict \
+  kernel.unprivileged_bpf_disabled \
+  net.core.bpf_jit_harden \
+  kernel.kexec_load_disabled \
+  kernel.yama.ptrace_scope \
+  vm.mmap_rnd_bits \
+  vm.mmap_rnd_compat_bits \
+  fs.protected_fifos \
+  net.ipv4.tcp_sack \
+  net.ipv6.conf.all.accept_ra
+
+# Verify GRUB boot parameters are active (after reboot)
+cat /proc/cmdline
+
 # Restart DNS resolver
 sudo systemctl restart systemd-resolved
 
@@ -1819,6 +2029,7 @@ All settings (except the active MAC address) will also **persist across reboots*
 | File to create/edit | Location | Command to apply |
 |---|---|---|
 | `99-hardening.conf` | `/etc/sysctl.d/99-hardening.conf` | `sudo sysctl --system` |
+| GRUB boot parameters | `/etc/default/grub` | `sudo update-grub` then reboot |
 | `99-swappiness.conf` | `/etc/sysctl.d/99-swappiness.conf` | `sudo sysctl --system` |
 | `resolved.conf` | `/etc/systemd/resolved.conf` | `sudo systemctl restart systemd-resolved` |
 | `NetworkManager.conf` | `/etc/NetworkManager/NetworkManager.conf` | `sudo systemctl restart NetworkManager` |
