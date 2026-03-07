@@ -490,6 +490,14 @@ sudo cp /etc/hosts.bak /etc/hosts
 sudo curl -fsSL https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts -o /etc/hosts
 ```
 
+Then immediately append your hostname so `sudo` stays fast:
+
+```bash
+echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
+```
+
+> **Why this matters:** Your hostname (`AsusA15` etc.) must be present in `/etc/hosts` or every `sudo` command triggers a DNS lookup for it, waits for a timeout, and takes ~10 seconds before showing the password prompt. The StevenBlack download replaces `/etc/hosts` entirely, so the hostname line needs to be re-added after every update — which is why the systemd service handles it automatically via `ExecStartPost`.
+
 This replaces `/etc/hosts` entirely. The downloaded file includes the standard localhost entries (`127.0.0.1 localhost`, `::1 localhost` etc.) at the top, so nothing is lost.
 
 ### Step 3 — Verify it worked
@@ -527,7 +535,10 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/curl -fsSL https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts -o /etc/hosts
+ExecStartPost=/bin/sh -c 'grep -qxF "127.0.1.1 $(hostname)" /etc/hosts || echo "127.0.1.1 $(hostname)" >> /etc/hosts'
 ```
+
+> **Note:** The `ExecStartPost` line re-appends your hostname after every download. Without it, each update would wipe the hostname entry and cause `sudo` to take ~10 seconds before showing the password prompt. The `-qxF` flag on `grep` checks for an exact full-line match so the line is never duplicated. `$(hostname)` is a shell variable that automatically resolves to your machine's hostname at runtime — **copy this line exactly as-is, do not replace anything**. For example, on a machine named `AsusA15` it would append `127.0.1.1 AsusA15`, on a machine named `mypc` it would append `127.0.1.1 mypc` — all automatically.
 
 ### Step 5 — Create the timer
 
