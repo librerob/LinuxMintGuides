@@ -6,7 +6,7 @@ A collection of personal installation and configuration guides for **Linux Mint*
 
 ## Preview
 
-![Linux Mint desktop with dark GTK theme, Goodvibes radio player, and Cinnamon taskbar](assets/cinnamon-dekstop.png)
+![Linux Mint desktop with dark GTK theme, Goodvibes radio player, and Cinnamon taskbar](assets/cinnamon-dekstopp.png)
 
 *A clean Linux Mint Cinnamon setup — dark theme, minimal taskbar, Goodvibes playing in the background.*
 
