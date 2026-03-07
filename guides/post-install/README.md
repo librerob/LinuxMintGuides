@@ -770,6 +770,7 @@ Linux Mint and Ubuntu ship several packages that many users never need. Removing
 | `webapp-manager` | Creates web app launchers (Mint) | Rarely used; easy to reinstall if needed |
 | `rhythmbox` `rhythmbox-data` `rhythmbox-plugins` `rhythmbox-plugin-tray-icon` | GNOME music player | Bulky; replace with a lighter player like Celluloid or just use a browser |
 | `hypnotix` | IPTV player (Mint) | Niche app most users don't need |
+| `gnome-terminal` `gnome-terminal-data` | Default GNOME terminal emulator | Replaced by Kitty (see Section 9) |
 
 ```bash
 sudo apt purge \
@@ -778,7 +779,8 @@ sudo apt purge \
   samba-common samba-common-bin \
   webapp-manager \
   rhythmbox rhythmbox-data rhythmbox-plugins rhythmbox-plugin-tray-icon \
-  hypnotix
+  hypnotix \
+  gnome-terminal gnome-terminal-data
 ```
 
 Clean up leftover dependencies afterwards:
@@ -807,6 +809,7 @@ sudo apt update && sudo apt install -y \
   gimp \
   bleachbit \
   zsh \
+  kitty \
   ffmpegthumbnailer \
   ffmpeg \
   synaptic \
@@ -828,6 +831,7 @@ sudo apt update && sudo apt install -y \
 | `gimp` | Full-featured image editor |
 | `bleachbit` | System cleaner — frees disk space, clears caches and logs |
 | `zsh` | Z shell — a powerful, highly customisable shell |
+| `kitty` | Fast, GPU-accelerated terminal emulator with tabs and splits |
 | `ffmpegthumbnailer` | Generates video thumbnails in file managers |
 | `ffmpeg` | CLI tool for video/audio conversion and processing |
 | `synaptic` | Graphical package manager — useful for browsing and pinning packages |
@@ -838,7 +842,242 @@ sudo apt update && sudo apt install -y \
 
 > **Note:** `libreoffice`, `celluloid`, and `transmission-gtk` are pre-installed on Linux Mint and do not need to be reinstalled.
 
-### Add your user to the KVM group
+### Kitty terminal
+
+Kitty is a fast, GPU-accelerated terminal emulator with tab and split-pane support. Linux Mint ships `gnome-terminal` by default — replace it with Kitty.
+
+**Install Kitty and remove gnome-terminal:**
+
+```bash
+sudo apt install kitty
+sudo apt purge gnome-terminal gnome-terminal-data
+sudo apt autoremove --purge
+```
+
+**Set Kitty as the default terminal** in Cinnamon:
+
+```
+System Settings → Preferred Applications → Terminal → kitty
+```
+
+**Apply the config:**
+
+```bash
+mkdir -p ~/.config/kitty
+nano ~/.config/kitty/kitty.conf
+```
+
+Paste the following:
+
+```
+# Place this file at: ~/.config/kitty/kitty.conf
+# Reload config without restart: ctrl+shift+f5
+
+# =============================================================================
+# FONTS
+# =============================================================================
+
+font_family      JetBrains Mono Regular
+bold_font        JetBrains Mono Bold
+italic_font      JetBrains Mono Italic
+bold_italic_font JetBrains Mono Bold Italic
+font_size        12.0
+
+# =============================================================================
+# CURSOR
+# =============================================================================
+
+cursor_shape               beam
+cursor_shape_unfocused     hollow
+cursor_blink_interval      0.5
+cursor_stop_blinking_after 15.0
+
+# =============================================================================
+# SCROLLBACK
+# =============================================================================
+
+scrollback_lines        10000
+scrollback_pager_history_size 0
+
+# =============================================================================
+# MOUSE
+# =============================================================================
+
+mouse_hide_wait    3.0
+copy_on_select     no
+strip_trailing_spaces smart
+
+# =============================================================================
+# PERFORMANCE
+# =============================================================================
+
+repaint_delay   10
+input_delay     3
+sync_to_monitor yes
+
+# =============================================================================
+# BELL
+# =============================================================================
+
+enable_audio_bell no
+visual_bell_duration 0.0
+window_alert_on_bell yes
+
+# =============================================================================
+# WINDOW
+# =============================================================================
+
+remember_window_size   yes
+initial_window_width   1000
+initial_window_height  650
+
+window_padding_width   8
+
+hide_window_decorations no
+draw_minimal_borders yes
+
+# =============================================================================
+# TABS
+# =============================================================================
+
+tab_bar_style          powerline
+tab_powerline_style    slanted
+tab_title_template     "{index}: {title}"
+tab_bar_min_tabs       2
+
+# =============================================================================
+# COLORS — Tokyo Night
+# =============================================================================
+
+background            #1a1b26
+foreground            #c0caf5
+
+selection_background  #364a82
+selection_foreground  #c0caf5
+
+cursor                #c0caf5
+cursor_text_color     #1a1b26
+
+url_color             #73daca
+
+# Black
+color0  #15161e
+color8  #414868
+
+# Red
+color1  #f7768e
+color9  #f7768e
+
+# Green
+color2  #9ece6a
+color10 #9ece6a
+
+# Yellow
+color3  #e0af68
+color11 #e0af68
+
+# Blue
+color4  #7aa2f7
+color12 #7aa2f7
+
+# Magenta
+color5  #bb9af7
+color13 #bb9af7
+
+# Cyan
+color6  #7dcfff
+color14 #7dcfff
+
+# White
+color7  #a9b1d6
+color15 #c0caf5
+
+# =============================================================================
+# KEYBOARD SHORTCUTS
+# =============================================================================
+
+# -- Tabs --
+map ctrl+t        new_tab_with_cwd
+map ctrl+w        close_tab
+map ctrl+shift+l  next_tab
+map ctrl+shift+h  previous_tab
+
+# -- Windows / Splits --
+map ctrl+shift+enter  new_window_with_cwd
+map ctrl+shift+w      close_window
+
+# Navigate splits
+map ctrl+shift+left   neighboring_window left
+map ctrl+shift+right  neighboring_window right
+map ctrl+shift+up     neighboring_window up
+map ctrl+shift+down   neighboring_window down
+
+# Layouts
+map ctrl+shift+z  toggle_layout stack
+
+# -- Font size --
+map ctrl+equal   change_font_size all +1.0
+map ctrl+minus   change_font_size all -1.0
+map ctrl+0       change_font_size all 0
+
+# -- Clipboard --
+map ctrl+shift+c  copy_to_clipboard
+map ctrl+shift+v  paste_from_clipboard
+
+# -- Scrollback --
+map ctrl+shift+k  scroll_line_up
+map ctrl+shift+j  scroll_line_down
+map ctrl+shift+u  scroll_page_up
+map ctrl+shift+d  scroll_page_down
+
+# -- Miscellaneous --
+map ctrl+shift+f5  load_config_file
+map ctrl+shift+F2  edit_config_file
+
+# =============================================================================
+# SHELL INTEGRATION
+# =============================================================================
+
+shell_integration enabled
+
+# =============================================================================
+# MISC
+# =============================================================================
+
+open_url_with default
+url_style curly
+close_on_child_death no
+allow_remote_control  no
+update_check_interval 0
+```
+
+**Config highlights:**
+
+| Setting | Value | Effect |
+|---|---|---|
+| `font_family` | JetBrains Mono | Uses the monospace font installed in Section 14 |
+| `cursor_shape` | `beam` | Thin beam cursor when focused, hollow when unfocused |
+| `scrollback_lines` | `10000` | Keeps 10,000 lines of scrollback history |
+| `enable_audio_bell` | `no` | Disables the terminal bell |
+| `tab_bar_style` | `powerline` | Powerline-style slanted tab bar — only appears when 2+ tabs are open |
+| `shell_integration` | `enabled` | Enables jump-to-prompt, cwd tracking, and other Kitty shell features |
+| `update_check_interval` | `0` | Disables Kitty's built-in update checker |
+| Colors | Tokyo Night | Dark theme matching the overall desktop palette |
+
+**Key shortcuts:**
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+T` | New tab (opens in current directory) |
+| `Ctrl+W` | Close tab |
+| `Ctrl+Shift+L / H` | Next / previous tab |
+| `Ctrl+Shift+Enter` | New split window (opens in current directory) |
+| `Ctrl+Shift+Arrow` | Navigate between splits |
+| `Ctrl+Shift+Z` | Toggle zoom (stack layout — maximise current split) |
+| `Ctrl+Equal / Minus` | Increase / decrease font size |
+| `Ctrl+Shift+F5` | Reload config without restarting |
+
+> **Note:** JetBrains Mono must be installed for the font config to work — it is covered in Section 14. If Kitty launches before fonts are installed it will fall back to a system monospace font automatically.
 
 After installing virt-manager, add your user to the `kvm` group so you can manage VMs without sudo:
 
@@ -2059,6 +2298,8 @@ All settings (except the active MAC address) will also **persist across reboots*
 | Disable casper-md5check | — (CLI only) | `sudo systemctl disable casper-md5check.service` |
 | Remove unwanted packages | — (CLI only) | `sudo apt purge warpinator sticky samba-common ...` |
 | Install software | — (CLI only) | `sudo apt install ...` |
+| Install Kitty + remove gnome-terminal | — (CLI only) | `sudo apt install kitty && sudo apt purge gnome-terminal gnome-terminal-data` |
+| Kitty config | `~/.config/kitty/kitty.conf` | Reload with `Ctrl+Shift+F5` inside Kitty |
 | Install Brave | — (CLI only) | See Section 10 |
 | Brave policies | `/etc/brave/policies/managed/policies.json` | Restart Brave, verify at `brave://policy/` |
 | Set default shell to Zsh | — (CLI only) | `chsh -s $(which zsh)` |
