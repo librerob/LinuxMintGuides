@@ -458,6 +458,14 @@ resolvectl query cloudflare.com
 
 ### What this does
 
+System-wide ad and malware blocking via the `/etc/hosts` file, combined with a clean unfiltered DNS resolver, is a deliberate two-layer approach:
+
+> **Why this approach?**
+>
+> Cloudflare's `1.1.1.1` is used purely as a fast, privacy-focused DNS resolver — it encrypts your queries in transit but does **no filtering**. Cloudflare does offer filtering variants (`1.1.1.2` for malware blocking, `1.1.1.3` for malware + adult content), but using those means sending every blocked query to a third-party server and trusting them to decide what gets blocked. That trades privacy for convenience.
+>
+> Instead, blocking is handled **locally** via the hosts file — before any DNS query is even made. You control the blocklist, it works for every app and process on the system (not just the browser), and nothing is sent to an external resolver to be filtered. Cloudflare just handles resolution; the hosts file handles blocking.
+
 The `/etc/hosts` file maps hostnames to IP addresses before any DNS query is made. By redirecting known ad and malware domains to `0.0.0.0`, every app and process on the system — browsers, terminals, background services — is blocked from reaching those domains at the OS level, with no browser extension or proxy required.
 
 This section uses [StevenBlack's hosts](https://github.com/StevenBlack/hosts) — a well-maintained, widely used merged blocklist covering adware and malware domains (~76k entries). A systemd timer keeps it updated weekly automatically.
