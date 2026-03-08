@@ -8,23 +8,23 @@ This guide covers everything to do right after a fresh Linux Mint install — sy
 
 ## Table of Contents
 
-1. [Kernel & System Tuning (`99-hardening.conf`)](#1-kernel--system-tuning)
+1. [Kernel & System Tuning (`99-hardening.conf`)](#1-kernel-system-tuning)
 2. [GRUB Boot Parameters](#1a-grub-boot-parameters)
 3. [Tune Swappiness (`99-swappiness.conf`)](#2-tune-swappiness)
 4. [Cloudflare DNS over TLS (`resolved.conf`)](#3-cloudflare-dns-over-tls)
-5. [Hosts File Ad & Malware Blocking](#4-hosts-file-ad--malware-blocking)
+5. [Hosts File Ad & Malware Blocking](#4-hosts-file-ad-malware-blocking)
 6. [Random MAC Address at Every Boot (`NetworkManager.conf`)](#5-random-mac-address-at-every-boot)
 7. [UFW Firewall](#6-ufw-firewall)
-8. [UFW + QEMU/Virt-Manager (Optional)](#7-ufw--qemuvirt-manager-optional)
+8. [UFW + QEMU/Virt-Manager (Optional)](#7-ufw-qemuvirt-manager-optional)
 9. [Disable Unnecessary Services](#8-disable-unnecessary-services)
 10. [Remove Unwanted Packages](#9-remove-unwanted-packages)
 11. [Software to Install](#10-software-to-install)
 12. [Brave Browser](#11-brave-browser)
 13. [Zsh Configuration](#12-zsh-configuration)
 14. [Cinnamon Desktop Tweaks](#13-cinnamon-desktop-tweaks)
-15. [Unified Qt & GTK Theming](#14-unified-qt--gtk-theming)
+15. [Unified Qt & GTK Theming](#14-unified-qt-gtk-theming)
 16. [Font Configuration](#15-font-configuration)
-17. [Applying Everything & Verifying](#16-applying-everything--verifying)
+17. [Applying Everything & Verifying](#16-applying-everything-verifying)
 18. [Quick Reference Cheatsheet](#17-quick-reference-cheatsheet)
 
 ---
@@ -670,7 +670,7 @@ Each time you disconnect and reconnect to a network, the MAC shown for your inte
 
 ---
 
-## 5. UFW Firewall
+## 6. UFW Firewall
 
 ### What this does
 
@@ -731,7 +731,7 @@ You should see your rules and `Status: active`.
 
 ---
 
-## 6. UFW + QEMU/Virt-Manager (Optional)
+## 7. UFW + QEMU/Virt-Manager (Optional)
 
 > **Skip this section if you do not use QEMU, KVM, or Virt-Manager.**
 
@@ -817,7 +817,7 @@ ping -c 3 google.com # DNS resolution
 
 ---
 
-## 7. Disable Unnecessary Services
+## 8. Disable Unnecessary Services
 
 ### What this does
 
@@ -900,7 +900,7 @@ Each should return `disabled` or `not-found`. If any return `enabled`, re-run th
 
 ---
 
-## 8. Remove Unwanted Packages
+## 9. Remove Unwanted Packages
 
 Linux Mint and Ubuntu ship several packages that many users never need. Removing them frees up disk space, reduces background activity, and removes services that may phone home or open unnecessary network ports.
 
@@ -935,7 +935,7 @@ sudo apt autoremove --purge
 
 ---
 
-## 9. Software to Install
+## 10. Software to Install
 
 ### From the official repositories (apt)
 
@@ -1420,7 +1420,7 @@ groups | grep kvm
 
 ---
 
-## 10. Brave Browser
+## 11. Brave Browser
 
 ### What this does
 
@@ -1548,7 +1548,7 @@ Restart Brave, then visit `brave://policy/` to confirm all policies are loaded a
 
 ---
 
-## 11. Zsh Configuration
+## 12. Zsh Configuration
 
 ### What this does
 
@@ -1956,7 +1956,7 @@ Check syntax highlighting is active by typing a command — valid commands shoul
 
 ---
 
-## 12. Cinnamon Desktop Tweaks
+## 13. Cinnamon Desktop Tweaks
 
 > **Skip this section if you are not using the Cinnamon desktop** (e.g. Linux Mint).
 
@@ -2023,7 +2023,7 @@ Right-click the clock in the taskbar → **Configure**
 
 ---
 
-## 13. Unified Qt & GTK Theming
+## 14. Unified Qt & GTK Theming
 
 ### What this does
 
@@ -2101,7 +2101,7 @@ The `/etc/environment` variables are only picked up at login. After logging back
 
 ---
 
-## 14. Font Configuration
+## 15. Font Configuration
 
 Good font configuration on Linux Mint covers three things: rendering quality (how fonts are drawn on screen), metric-compatible substitutions (so documents and web pages that request Windows fonts render with correct spacing), and choosing readable system fonts for the desktop UI.
 
@@ -2467,7 +2467,7 @@ Open **Tools → Options → LibreOffice Writer → Basic Fonts (Western)** and 
 
 ---
 
-## 15. Applying Everything & Verifying
+## 16. Applying Everything & Verifying
 
 Here is a single block you can run after creating all the files above:
 
@@ -2552,7 +2552,7 @@ All settings (except the active MAC address) will also **persist across reboots*
 
 ---
 
-## 16. Quick Reference Cheatsheet
+## 17. Quick Reference Cheatsheet
 
 | File to create/edit | Location | Command to apply |
 |---|---|---|
