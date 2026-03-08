@@ -1660,14 +1660,59 @@ _comp_options+=(globdots)
 # see what is currently mounted under /media/robin/
 #
 # Excludes: .cache, Music, Downloads, .var, Trash, BraveSoftware,
-#           Chromium, torbrowser, flatpak, snap, Desktop
+#           Chromium, torbrowser, flatpak, snap, Desktop,
+#           .nv, .pki, .linuxmint, .icons, .clamtk, Public, .dmrc, .face,
+#           .config/cinnamon, .config/cinnamon-session, .config/libreoffice,
+#           .config/menu, .config/pix, .config/ibus,
+#           .local/state, .local/share/applications, .local/share/cinnamon,
+#           .local/share/evolution, .local/share/geary, .local/share/gvfs-metadata,
+#           .local/share/ice, .local/share/inxi, .local/share/keyrings,
+#           .local/share/torbrowser, .local/share/pix, .local/share/xreader
 backup-usb() {
   echo "Available drives in /media/robin/:"
   ls /media/robin/
   echo ""
   read "drive?Enter USB drive name [Backup-Linux/Backup]: "
   drive=${drive:-Backup-Linux/Backup}
-  rsync -rltvP --delete --exclude=".cache" --exclude="Music" --exclude="Downloads" --exclude=".var" --exclude=".local/share/Trash" --exclude=".config/BraveSoftware" --exclude=".config/chromium" --exclude=".config/torbrowser" --exclude=".local/share/flatpak" --exclude="snap" --exclude="Desktop" ~/ "/media/robin/$drive/"
+  rsync -rltvP --delete \
+    --exclude=".cache" \
+    --exclude="Music" \
+    --exclude="Downloads" \
+    --exclude=".var" \
+    --exclude=".local/share/Trash" \
+    --exclude=".config/BraveSoftware" \
+    --exclude=".config/chromium" \
+    --exclude=".config/torbrowser" \
+    --exclude=".local/share/flatpak" \
+    --exclude="snap" \
+    --exclude="Desktop" \
+    --exclude=".nv" \
+    --exclude=".pki" \
+    --exclude=".linuxmint" \
+    --exclude=".icons" \
+    --exclude=".clamtk" \
+    --exclude="Public" \
+    --exclude=".dmrc" \
+    --exclude=".face" \
+    --exclude=".config/cinnamon" \
+    --exclude=".config/cinnamon-session" \
+    --exclude=".config/libreoffice" \
+    --exclude=".config/menu" \
+    --exclude=".config/pix" \
+    --exclude=".config/ibus" \
+    --exclude=".local/state" \
+    --exclude=".local/share/applications" \
+    --exclude=".local/share/cinnamon" \
+    --exclude=".local/share/evolution" \
+    --exclude=".local/share/geary" \
+    --exclude=".local/share/gvfs-metadata" \
+    --exclude=".local/share/ice" \
+    --exclude=".local/share/inxi" \
+    --exclude=".local/share/keyrings" \
+    --exclude=".local/share/torbrowser" \
+    --exclude=".local/share/pix" \
+    --exclude=".local/share/xreader" \
+    ~/ "/media/robin/$drive/"
 }
 
 ##### Aliases #####
@@ -1703,13 +1748,96 @@ alias \
 #   --delete  mirror deletions from source to destination
 #
 # Excludes: .cache, Music, Downloads, .var, Trash, BraveSoftware,
-#           Chromium, torbrowser, flatpak, snap, Desktop
+#           Chromium, torbrowser, flatpak, snap, Desktop,
+#           .nv, .pki, .linuxmint, .icons, .clamtk, Public, .dmrc, .face,
+#           .config/cinnamon, .config/cinnamon-session, .config/libreoffice,
+#           .config/menu, .config/pix, .config/ibus,
+#           .local/state, .local/share/applications, .local/share/cinnamon,
+#           .local/share/evolution, .local/share/geary, .local/share/gvfs-metadata,
+#           .local/share/ice, .local/share/inxi, .local/share/keyrings,
+#           .local/share/torbrowser, .local/share/pix, .local/share/xreader
 #
 # Note: owner, group and permissions are intentionally NOT preserved
 # so backups restore cleanly on different machines/users
-alias backup='rsync -rltvP --delete --exclude=".cache" --exclude="Music" --exclude="Downloads" --exclude=".var" --exclude=".local/share/Trash" --exclude=".config/BraveSoftware" --exclude=".config/chromium" --exclude=".config/torbrowser" --exclude=".local/share/flatpak" --exclude="snap" --exclude="Desktop" ~/ /mnt/data/Backup/'
+alias backup='rsync -rltvP --delete \
+    --exclude=".cache" \
+    --exclude="Music" \
+    --exclude="Downloads" \
+    --exclude=".var" \
+    --exclude=".local/share/Trash" \
+    --exclude=".config/BraveSoftware" \
+    --exclude=".config/chromium" \
+    --exclude=".config/torbrowser" \
+    --exclude=".local/share/flatpak" \
+    --exclude="snap" \
+    --exclude="Desktop" \
+    --exclude=".nv" \
+    --exclude=".pki" \
+    --exclude=".linuxmint" \
+    --exclude=".icons" \
+    --exclude=".clamtk" \
+    --exclude="Public" \
+    --exclude=".dmrc" \
+    --exclude=".face" \
+    --exclude=".config/cinnamon" \
+    --exclude=".config/cinnamon-session" \
+    --exclude=".config/libreoffice" \
+    --exclude=".config/menu" \
+    --exclude=".config/pix" \
+    --exclude=".config/ibus" \
+    --exclude=".local/state" \
+    --exclude=".local/share/applications" \
+    --exclude=".local/share/cinnamon" \
+    --exclude=".local/share/evolution" \
+    --exclude=".local/share/geary" \
+    --exclude=".local/share/gvfs-metadata" \
+    --exclude=".local/share/ice" \
+    --exclude=".local/share/inxi" \
+    --exclude=".local/share/keyrings" \
+    --exclude=".local/share/torbrowser" \
+    --exclude=".local/share/pix" \
+    --exclude=".local/share/xreader" \
+    ~/ /mnt/data/Backup/'
 
-alias backup-dry='rsync -rltvP --delete --dry-run --exclude=".cache" --exclude="Music" --exclude="Downloads" --exclude=".var" --exclude=".local/share/Trash" --exclude=".config/BraveSoftware" --exclude=".config/chromium" --exclude=".config/torbrowser" --exclude=".local/share/flatpak" --exclude="snap" --exclude="Desktop" ~/ /mnt/data/Backup/'
+alias backup-dry='rsync -rltvP --delete --dry-run \
+    --exclude=".cache" \
+    --exclude="Music" \
+    --exclude="Downloads" \
+    --exclude=".var" \
+    --exclude=".local/share/Trash" \
+    --exclude=".config/BraveSoftware" \
+    --exclude=".config/chromium" \
+    --exclude=".config/torbrowser" \
+    --exclude=".local/share/flatpak" \
+    --exclude="snap" \
+    --exclude="Desktop" \
+    --exclude=".nv" \
+    --exclude=".pki" \
+    --exclude=".linuxmint" \
+    --exclude=".icons" \
+    --exclude=".clamtk" \
+    --exclude="Public" \
+    --exclude=".dmrc" \
+    --exclude=".face" \
+    --exclude=".config/cinnamon" \
+    --exclude=".config/cinnamon-session" \
+    --exclude=".config/libreoffice" \
+    --exclude=".config/menu" \
+    --exclude=".config/pix" \
+    --exclude=".config/ibus" \
+    --exclude=".local/state" \
+    --exclude=".local/share/applications" \
+    --exclude=".local/share/cinnamon" \
+    --exclude=".local/share/evolution" \
+    --exclude=".local/share/geary" \
+    --exclude=".local/share/gvfs-metadata" \
+    --exclude=".local/share/ice" \
+    --exclude=".local/share/inxi" \
+    --exclude=".local/share/keyrings" \
+    --exclude=".local/share/torbrowser" \
+    --exclude=".local/share/pix" \
+    --exclude=".local/share/xreader" \
+    ~/ /mnt/data/Backup/'
 
 ##### Keybindings #####
 # Ctrl + Left/Right to jump words
@@ -1804,7 +1932,7 @@ Two rsync aliases for backing up the home directory to a second internal SSD mou
 | `--delete` | Mirror deletions — removes files from the destination that no longer exist in the source |
 | `--dry-run` | Simulate the operation without making any changes (backup-dry only) |
 
-Files and directories excluded from both backups: `.cache`, `Music`, `Downloads`, `.var`, `Trash`, `BraveSoftware`, `chromium`, `torbrowser`, `flatpak`, `snap`, `Desktop`.
+Files and directories excluded from both backups: `.cache`, `Music`, `Downloads`, `.var`, `Trash`, `BraveSoftware`, `chromium`, `torbrowser`, `flatpak`, `snap`, `Desktop`, `.nv`, `.pki`, `.linuxmint`, `.icons`, `.clamtk`, `Public`, `.dmrc`, `.face`, `.config/cinnamon`, `.config/cinnamon-session`, `.config/libreoffice`, `.config/menu`, `.config/pix`, `.config/ibus`, `.local/state`, `.local/share/applications`, `.local/share/cinnamon`, `.local/share/evolution`, `.local/share/geary`, `.local/share/gvfs-metadata`, `.local/share/ice`, `.local/share/inxi`, `.local/share/keyrings`, `.local/share/torbrowser`, `.local/share/pix`, `.local/share/xreader`.
 
 > Owner, group, and permissions are intentionally not preserved (no `-a` / `--archive` flag). This means backups restore cleanly even on a different machine or under a different username.
 
